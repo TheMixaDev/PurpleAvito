@@ -34,13 +34,13 @@ import UISideButton from './components/ui/UISideButton.vue';
             </svg>
             <span class="sr-only">Toggle sidebar</span>
           </button>
-          <a href="https://flowbite.com" class="flex items-center justify-between mr-4">
+          <a class="flex items-center justify-between mr-4">
             <img
               src="/logo.png"
               class="mr-3 h-8"
               alt="Avito Logo"
             />
-            <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">Avito панель управления</span>
+            <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">Avito панель администратора</span>
           </a>
         </div>
       </div>
@@ -55,16 +55,16 @@ import UISideButton from './components/ui/UISideButton.vue';
     >
       <div class="overflow-y-auto py-5 px-3 h-full bg-white dark:bg-gray-800">
         <ul class="space-y-2">
-          <UISideButton title="Главная">
+          <UISideButton title="Главная" to="/">
             <PieIcon/>
           </UISideButton>
-          <UISideButton title="Настройки цен">
+          <UISideButton title="Настройки цен" to="/setup">
             <LockIcon/>
           </UISideButton>
-          <UISideButton title="Создание матрицы">
+          <UISideButton title="Создание матрицы" to="/create">
             <AddIcon/>
           </UISideButton>
-          <UISideButton title="Просмотр матриц">
+          <UISideButton title="Просмотр матриц" to="/">
             <PageIcon/>
           </UISideButton>
         </ul>

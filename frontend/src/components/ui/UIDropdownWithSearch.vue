@@ -5,12 +5,13 @@ import MagnifierIcon from '@/assets/icons/MagnifierIcon.vue';
 import UITableEmpty from './table/UITableEmpty.vue';
 </script>
 <template>
-    <div class="relative w-full p-0 m-0">
+    <div class="w-full p-0 m-0">
         <div :class="['relative', showSelector ? 'z-20' : '']">
             <button
                 class="flex-shrink-0 inline-flex items-center py-2.5 px-4 text-sm font-medium text-center text-gray-500 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:focus:ring-gray-700 dark:text-white dark:border-gray-600 w-full disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
                 type="button"
                 @click="showSelector = !showSelector"
+                ref="button"
                 :disabled="disabled">
                 <slot v-if="!options || options.length <= 0 ||
                             !modelValue || modelValue.length === 0 || modelValue * 1 === 0"></slot>
@@ -22,7 +23,8 @@ import UITableEmpty from './table/UITableEmpty.vue';
                 </span>
             </button>
         </div>
-        <div v-if="showSelector" class="z-10 bg-white rounded-lg shadow dark:bg-gray-700 w-full absolute animate-fade-down animate-once animate-duration-200 animate-ease-in">
+        <div v-if="showSelector" class="z-10 bg-white rounded-lg shadow dark:bg-gray-700 absolute animate-fade-down animate-once animate-duration-200 animate-ease-in"
+            :style="`width: ${$refs.button.offsetWidth}px;`">
             <div class="p-3">
                 <label for="input-group-search" class="sr-only">Search</label>
                 <div class="relative">
@@ -81,7 +83,8 @@ export default {
     methods: {
         select(key) {
             this.$emit('update:modelValue', key);
-            this.$emit('changed');
+            if(this.modelValue != key)
+                this.$emit('changed');
             this.showSelector = false;
         },
         /**

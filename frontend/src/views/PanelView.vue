@@ -10,17 +10,24 @@ import UIDropdownWithSearch from '@/components/ui/UIDropdownWithSearch.vue';
 import { Pagination } from '@/models/pagination';
 import { MatrixItem } from '@/models/matrixItem';
 import UILabeledInput from '@/components/ui/UILabeledInput.vue';
+import UISetupButton from '@/components/ui/UISetupButton.vue';
 </script>
 <template>
     <section>
-        <div>
-            Создать новую матрицу:
-            <UIDropdownWithSearch
-                v-model="parentMatrix"
-                :options="unitedMatrixes"
-                >
-                Выберите матрицу наследования
-            </UIDropdownWithSearch>
+        <ul class="text-sm font-medium text-center text-gray-500 rounded-lg shadow sm:flex dark:divide-gray-700 dark:text-gray-400">
+            <UISetupButton :selected="true">
+                Создание новой матрицы
+            </UISetupButton>
+        </ul>
+        <div class="p-4">
+            <div class="mx-auto max-w-screen-xl p-3 px-4 lg:px-12">
+                <UIDropdownWithSearch
+                    v-model="parentMatrix"
+                    :options="unitedMatrixes"
+                    >
+                    Выберите матрицу наследования
+                </UIDropdownWithSearch>
+            </div>
             <TableComponent
                 @searchApply="loadData"
                 :pagination="pagination"
@@ -56,8 +63,18 @@ import UILabeledInput from '@/components/ui/UILabeledInput.vue';
                     </UITableCell>
                 </UITableRow>
             </TableComponent>
-            <UIButton>Загрузить из файла</UIButton>
-            <UIButton>Создать мартицу</UIButton>
+            <div class="mx-auto max-w-screen-xl p-3 px-4 lg:px-12">
+                <UIButton color="primary" class="w-full z-0">
+                    <font-awesome-icon :icon="['fas', 'download']"/>
+                    Загрузить из файла
+                </UIButton>
+            </div>
+            <div class="mx-auto max-w-screen-xl p-3 px-4 lg:px-12">
+                <UIButton color="secondary" class="w-full z-0">
+                    <font-awesome-icon :icon="['fas', 'plus']"/>
+                    Создать матрицу
+                </UIButton>
+            </div>
         </div>
     </section>
 </template>
