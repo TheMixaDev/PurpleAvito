@@ -5,11 +5,6 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'auth',
-      component: () => import('../views/AuthView.vue')
-    },
-    {
-      path: '/panel',
       name: 'panel',
       component: () => import('../views/PanelView.vue')
     },
