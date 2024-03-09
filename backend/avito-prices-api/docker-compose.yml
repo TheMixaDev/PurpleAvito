@@ -29,7 +29,7 @@ services:
       -c hot_standby=on 
       -c max_wal_senders=10 
       -c max_replication_slots=10 
-      -c hot_standby_feedback=onЖ
+      -c hot_standby_feedback=on
     volumes:
       - ./00_init.sql:/docker-entrypoint-initdb.d/00_init.sql
       - ./sql_data/baseline_matrix_1.sql:/docker-entrypoint-initdb.d/baseline_matrix_1.sql
