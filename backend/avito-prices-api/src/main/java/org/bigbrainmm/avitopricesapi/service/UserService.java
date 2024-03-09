@@ -1,8 +1,8 @@
 package org.bigbrainmm.avitopricesapi.service;
 
 import lombok.RequiredArgsConstructor;
-import org.bigbrainmm.avitopricesapi.model.Role;
-import org.bigbrainmm.avitopricesapi.model.User;
+import org.bigbrainmm.avitopricesapi.entity.Role;
+import org.bigbrainmm.avitopricesapi.entity.User;
 import org.bigbrainmm.avitopricesapi.repository.UserRepository;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;

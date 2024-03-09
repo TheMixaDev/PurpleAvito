@@ -1,6 +1,6 @@
 package org.bigbrainmm.avitopricesapi.repository;
 
-import org.bigbrainmm.avitopricesapi.model.User;
+import org.bigbrainmm.avitopricesapi.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

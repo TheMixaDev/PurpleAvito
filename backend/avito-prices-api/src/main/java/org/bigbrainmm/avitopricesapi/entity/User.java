@@ -1,4 +1,4 @@
-package org.bigbrainmm.avitopricesapi.model;
+package org.bigbrainmm.avitopricesapi.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
