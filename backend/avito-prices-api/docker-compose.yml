@@ -31,7 +31,7 @@ services:
       -c max_replication_slots=10 
       -c hot_standby_feedback=on
     volumes:
-      - ./00_init.sql:/docker-entrypoint-initdb.d/00_init.sql
+      - ./sql_data/00_init.sql:/docker-entrypoint-initdb.d/00_init.sql
       - ./sql_data/baseline_matrix_1.sql:/docker-entrypoint-initdb.d/baseline_matrix_1.sql
       - ./sql_data/baseline_matrix_2.sql:/docker-entrypoint-initdb.d/baseline_matrix_2.sql
       - ./sql_data/baseline_matrix_3.sql:/docker-entrypoint-initdb.d/baseline_matrix_3.sql
