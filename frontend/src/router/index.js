@@ -5,6 +5,16 @@ const router = createRouter({
   routes: [
     {
       path: '/',
+      name: 'main',
+      component: () => import('../views/MainView.vue')
+    },
+    {
+      path: '/setup',
+      name: 'setup',
+      component: () => import('../views/SetupView.vue')
+    },
+    {
+      path: '/create',
       name: 'panel',
       component: () => import('../views/PanelView.vue')
     },
