@@ -1,0 +1,72 @@
+version: '3.8'
+
+x-postgres-common:
+  &postgres-common
+  image: postgres:14-alpine
+  user: postgres
+  restart: always
+  healthcheck:
+    test: 'pg_isready -U hulumulu --dbname=postgres'
+    interval: 10s
+    timeout: 5s
+    retries: 5
+
+services:
+  postgres_primary:
+    <<: *postgres-common
+    container_name: postgres_primary
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: hulumulu
+      POSTGRES_DB: avito_db
+      POSTGRES_PASSWORD: Qwerty123
+      POSTGRES_HOST_AUTH_METHOD: "scram-sha-256\nhost replication all 0.0.0.0/0 md5"
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+    command: |
+      postgres 
+      -c wal_level=replica 
+      -c hot_standby=on 
+      -c max_wal_senders=10 
+      -c max_replication_slots=10 
+      -c hot_standby_feedback=onЖ
+    volumes:
+      - ./00_init.sql:/docker-entrypoint-initdb.d/00_init.sql
+      - ./sql_data/baseline_matrix_1.sql:/docker-entrypoint-initdb.d/baseline_matrix_1.sql
+      - ./sql_data/baseline_matrix_2.sql:/docker-entrypoint-initdb.d/baseline_matrix_2.sql
+      - ./sql_data/baseline_matrix_3.sql:/docker-entrypoint-initdb.d/baseline_matrix_3.sql
+      - ./sql_data/discount_matrix_1.sql:/docker-entrypoint-initdb.d/discount_matrix_1.sql
+      - ./sql_data/discount_matrix_2.sql:/docker-entrypoint-initdb.d/discount_matrix_2.sql
+      - ./sql_data/discount_matrix_3.sql:/docker-entrypoint-initdb.d/discount_matrix_3.sql
+  postgres_replica:
+    <<: *postgres-common
+    container_name: postgres_replica
+    ports:
+      - "5433:5432"
+    environment:
+      PGUSER: replicator
+      PGPASSWORD: Qwerty123
+    command: |
+      bash -c "
+      until pg_basebackup --pgdata=/var/lib/postgresql/data -R --slot=replication_slot --host=postgres_primary --port=5432
+      do
+      echo 'Waiting for primary to connect...'
+      sleep 1s
+      done
+      echo 'Backup done, starting replica...'
+      chmod 0700 /var/lib/postgresql/data
+      postgres
+      "
+    depends_on:
+      - postgres_primary
+  app:
+    container_name: spring_demo
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres_primary
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres_primary:5432/avito_db
+      - SPRING_DATASOURCE_USERNAME=hulumulu
+      - SPRING_DATASOURCE_PASSWORD=Qwerty123

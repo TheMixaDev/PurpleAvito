@@ -15,6 +15,6 @@ public class SourceBaseline {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name = "baseline_matrix_id")
-    private Long baselineMatrixId;
+    @Column(name = "name")
+    private String name;
 }

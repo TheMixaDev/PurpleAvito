@@ -1,3 +1,5 @@
+drop table if exists discount_matrix_1;
+
 create table discount_matrix_1(
     microcategory_id int,
     location_id int,

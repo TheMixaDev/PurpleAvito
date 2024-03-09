@@ -28,7 +28,7 @@ public class TreeNode {
     @Schema(description = "Родительский узел")
     private TreeNode parent;
     @Schema(description = "Список подузлов")
-    private List<TreeNode> subNodes = new ArrayList<>();;
+    private List<TreeNode> subNodes = new ArrayList<>();
 
     public TreeNode(Long id, String name, TreeNode parent) {
         this.id = id;
