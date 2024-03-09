@@ -1,6 +1,6 @@
 package org.bigbrainmm.avitopricesapi.staticstorage;
 
-import org.bigbrainmm.avitopricesapi.model.TreeNode;
+import org.bigbrainmm.avitopricesapi.dto.TreeNode;
 
 public class Trees {
     public static TreeNode microCategoryRoot = TreeNode.buildTreeFromFile("microcategories.txt");

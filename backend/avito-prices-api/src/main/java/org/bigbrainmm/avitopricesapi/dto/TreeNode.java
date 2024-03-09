@@ -1,6 +1,7 @@
-package org.bigbrainmm.avitopricesapi.model;
+package org.bigbrainmm.avitopricesapi.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,12 +18,16 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 @Setter
+@Schema(description = "Модель дерева для вывода категорий или локаций")
 public class TreeNode {
-
+    @Schema(description = "Идентификатор узла", example = "1")
     private Long id;
+    @Schema(description = "Имя узла", example = "root")
     private String name;
     @JsonIgnore
+    @Schema(description = "Родительский узел")
     private TreeNode parent;
+    @Schema(description = "Список подузлов")
     private List<TreeNode> subNodes = new ArrayList<>();;
 
     public TreeNode(Long id, String name, TreeNode parent) {
