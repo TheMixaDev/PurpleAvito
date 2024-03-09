@@ -23,7 +23,7 @@ public class TreeNode {
     private String name;
     @JsonIgnore
     private TreeNode parent;
-    private List<TreeNode> subNode = new ArrayList<>();;
+    private List<TreeNode> subNodes = new ArrayList<>();;
 
     public TreeNode(Long id, String name, TreeNode parent) {
         this.id = id;
@@ -35,14 +35,14 @@ public class TreeNode {
         sb.append("\t".repeat(Math.max(0, level)));
         sb.append(node.name);
         sb.append("\n");
-        for (TreeNode sn : node.subNode) {
+        for (TreeNode sn : node.subNodes) {
             printTree(sb, sn, level + 1);
         }
     }
 
     public void addSubNode(TreeNode sn) {
         if (sn != null) {
-            subNode.add(sn);
+            subNodes.add(sn);
             sn.setParent(this);
         }
     }
@@ -116,7 +116,7 @@ public class TreeNode {
         }
         sb.append(node.getName());
         System.out.println(sb.toString());
-        for (TreeNode subNode : node.getSubNode()) {
+        for (TreeNode subNode : node.getSubNodes()) {
             printTree(subNode, indent + 1);
         }
     }
