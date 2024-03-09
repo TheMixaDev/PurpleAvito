@@ -1,3 +1,4 @@
+import { configuration } from "@/assets/configuration";
 import { useAuthStore } from "@/stores/user";
 
 import router from "@/router";
@@ -12,6 +13,7 @@ export const FrontendService = {
      * @param {boolean} [redirect=true] - Optional. Specifies whether to redirect the user to the login page if validation fails. Defaults to true.
      */
     validateUser(cookies, success, redirect = true) {
+        if(configuration.debugMode) return success();
         const store = useAuthStore();
         store.cookieLogin(cookies, success, () => {
             if(redirect)
@@ -28,4 +30,19 @@ export const FrontendService = {
     formatDate(input, includeTime = false) {
         return moment(input).format(`YYYY.MM.DD${includeTime ? " HH:mm" : ""}`);
     },
+    runDataUpdater(updater, component, loadingToggler, ping = true) {
+        let startTime = new Date().getTime();
+        updater(component.$cookies, () => { // All updaters require [cookies; success; fail]
+            let diffTime = new Date().getTime() - startTime;
+            if(diffTime > 0)
+                setTimeout(loadingToggler,
+                    diffTime < configuration.minLoadingTimer && ping
+                    ? configuration.minLoadingTimer - diffTime
+                    : 0);
+            else loadingToggler();
+        }, () => {
+            loadingToggler();
+            component.$notify({type: 'error', text: 'Произошла ошибка при загрузке данных'});
+        });
+    }
 }

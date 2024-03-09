@@ -9,8 +9,14 @@ import router from './router'
 import VueCookies from 'vue-cookies'
 import Notifications from '@kyvg/vue3-notification'
 
+import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+import { library } from "@fortawesome/fontawesome-svg-core";
+import { faTrash, faPlus, faDownload, faPencil, faEye, faBolt, faCopy, faTriangleExclamation, faBan, faStop, faBuilding } from "@fortawesome/free-solid-svg-icons";
+library.add(faTrash, faPlus, faDownload, faPencil, faEye, faBolt, faCopy, faTriangleExclamation, faBan, faStop, faBuilding);
+
 const app = createApp(App)
 
+app.component('font-awesome-icon', FontAwesomeIcon)
 app.use(createPinia())
 app.use(router)
 app.use(VueCookies, { expires: '30d' })
