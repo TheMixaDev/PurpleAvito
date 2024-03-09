@@ -20,7 +20,7 @@ export default {
       }
     },
     colors: {
-      primary: colors.rose,
+      primary: colors.sky,
       secondary: colors.indigo,
       danger: colors.red,
       warning: colors.yellow
