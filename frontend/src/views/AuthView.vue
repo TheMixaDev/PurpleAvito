@@ -55,7 +55,7 @@ import router from '@/router';
 
 <script>
 export default {
-    name: 'LoginView',
+    name: 'AuthView',
     data() {
         return {
             login: '',
