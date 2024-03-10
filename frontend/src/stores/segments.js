@@ -22,7 +22,8 @@ export const useSegmentsStore = defineStore('segments', () => {
 
     function applySearch() {
         filtered.value = segments.value
-            .filter(item => item.id.toString().includes(search.value));
+            .filter(item => item.id.toString().includes(search.value) ||
+                            item.name?.toString().includes(search.value));
         pagination.value.total = filtered.value.length;
         if(pagination.value.maxPage <= pagination.value.page)
             pagination.value.page = 0;

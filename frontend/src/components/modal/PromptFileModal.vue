@@ -1,6 +1,4 @@
 <script setup>
-import CloseCrossIcon from "@/assets/icons/CloseCrossIcon.vue";
-
 import UIButton from "../ui/UIButton.vue";
 
 import { VueFinalModal } from 'vue-final-modal'
@@ -12,20 +10,16 @@ import { VueFinalModal } from 'vue-final-modal'
         content-transition="vfm-fade">
         <div class="relative p-4 w-full max-w-md h-full flex items-center justify-center">
             <div class="relative p-4 text-center w-full bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
-                <button type="button"
-                    class="text-gray-400 absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white"
-                    @click="$emit('close')">
-                    <CloseCrossIcon />
-                    <span class="sr-only">Закрыть</span>
-                </button>
                 <font-awesome-icon :icon="['fas', 'triangle-exclamation']" class="text-yellow-500 text-5xl m-3"/>
-                <p class="mb-4 text-gray-500 dark:text-gray-300">{{ text }}</p>
+                <p class="mb-4 text-gray-500 dark:text-gray-300">
+                    В таблице уже содержатся данные. Хотите ли вы добавить данные из файла или заменить ими таблицу?
+                </p>
                 <div class="flex justify-center items-center space-x-4">
-                    <UIButton color="gray" classExtension="text-black dark:text-white" @click="$emit('close')">
-                        Отмена
+                    <UIButton color="gray" classExtension="text-black dark:text-white" @click="$emit('clone')">
+                        Заменить
                     </UIButton>
-                    <UIButton color="secondary" @click="$emit('proceed')">
-                        Продолжить
+                    <UIButton color="secondary" @click="$emit('add')">
+                        Добавить
                     </UIButton>
                 </div>
             </div>
@@ -35,13 +29,8 @@ import { VueFinalModal } from 'vue-final-modal'
 
 <script>
 export default {
-    name: "WarningModal",
+    name: "PromptFileModal",
     props: ['text'],
-    emits: ['proceed', 'close'],
-    methods: {
-        close() {
-            this.$emit('close');
-        }
-    }
+    emits: ['add', 'clone']
 }
 </script>

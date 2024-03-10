@@ -23,6 +23,10 @@ const PAGE = "flex items-center justify-center text-sm py-2 px-3 leading-tight t
                     <UISearchField v-if="searchEnabled" v-model="searchValue" @apply="checkSearch"/>
                 </div>
                 <div class="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">
+                    <UIButton v-if="clearEnabled" @click="$emit('clearClick')" color="danger" :disabled="pagination.total < 1">
+                        <font-awesome-icon :icon="['fas', 'trash']"/>&nbsp;
+                        Очистить
+                    </UIButton>
                     <UIButton v-if="creationEnabled" @click="$emit('creationClick')">
                         <font-awesome-icon :icon="['fas', 'plus']"/>&nbsp;
                         Создать
@@ -107,6 +111,10 @@ export default {
             type: Boolean,
             default: true
         },
+        clearEnabled: {
+            type: Boolean,
+            default: false
+        },
         columns: Array,
         footerEnabled: {
             type: Boolean,
@@ -121,7 +129,7 @@ export default {
         isLoading: Boolean,
         pagination: Pagination
     },
-    emits: ['creationClick', 'pageChange', 'update:search', 'searchApply'],
+    emits: ['creationClick', 'pageChange', 'update:search', 'searchApply', 'clearClick'],
     computed: {
         /**
          * Generates an array of page numbers for pagination based on max page count and current page.

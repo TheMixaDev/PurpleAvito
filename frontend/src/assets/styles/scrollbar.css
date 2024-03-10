@@ -1,0 +1,22 @@
+* ::-webkit-scrollbar { 
+    -webkit-appearance: none; 
+    width: 10px; 
+    height: 10px;
+} 
+
+* ::-webkit-scrollbar-thumb { 
+    cursor: pointer; 
+    border-radius: 5px; 
+    background: linear-gradient(45deg, rgba(0,0,255,0.5), rgba(0, 94, 255, 0.25));
+    -webkit-transition: color .2s ease; 
+    transition: color .2s ease;
+} 
+
+* ::-webkit-scrollbar-thumb:hover { 
+    background: linear-gradient(45deg, rgba(0,0,255,0.5), rgba(0, 94, 255, 0.25));
+} 
+
+* ::-webkit-scrollbar-track { 
+    background: transparent; 
+    border-radius: 0;
+}

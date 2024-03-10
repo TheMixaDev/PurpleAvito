@@ -25,7 +25,7 @@ export const useSettingsStore = defineStore('settings', () => {
                     result[item.name] = item.name;
                     return result;
                 }, {});
-                matrices.value = {...baselineMatrices, ...discountMatrices};
+                matrices.value = {...baselineMatrices.value, ...discountMatrices.value};
                 loading.value = false;
                 success();
             }, fail

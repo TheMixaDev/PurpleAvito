@@ -1,4 +1,5 @@
 import { configuration } from "@/assets/configuration";
+import PromptFileModal from "@/components/modal/PromptFileModal.vue";
 import WarningModal from "@/components/modal/WarningModal.vue";
 
 import moment from "moment";
@@ -45,5 +46,26 @@ export const FrontendService = {
             }
         });
         modal.open();
+    },
+    showFileModal(add, clone) {
+        const modal = useModal({
+            component: PromptFileModal,
+            attrs: {
+                onAdd() {
+                    modal.close();
+                    add();
+                },
+                onClone() {
+                    modal.close();
+                    clone();
+                }
+            }
+        });
+        modal.open();
+    },
+    valueParser(value) {
+        if(value) value = parseInt(value);
+        if(!value) value = null;
+        return value;
     }
 }

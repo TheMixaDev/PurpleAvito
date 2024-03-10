@@ -19,12 +19,12 @@ export const MatrixService = {
             success(response.data);
         }, fail);
     },
-    setSegment: (id, name, success, fail) => {
-        MatrixService.setSegments([{ id, name }], success, fail);
+    setSegment: (segmentId, discountMatrixName, success, fail) => {
+        MatrixService.setSegments([{ segmentId, discountMatrixName }], success, fail);
     },
     setSegments: (segments, success, fail) => {
         NetworkService.ClassicRequest("POST", `matrices/setup/segments`,
-            segments, response => {
+            {discountSegments: segments}, response => {
             success(response.data);
         }, fail);
     }

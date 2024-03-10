@@ -1,5 +1,6 @@
 import './index.css'
 import 'vue-final-modal/style.css'
+import '@/assets/styles/scrollbar.css'
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
