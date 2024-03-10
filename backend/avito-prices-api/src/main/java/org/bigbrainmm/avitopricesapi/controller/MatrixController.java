@@ -25,10 +25,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.print.attribute.standard.Media;
 import javax.print.attribute.standard.MediaTray;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Stack;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -82,35 +79,27 @@ public class MatrixController {
             } else if (name.contains("discount_matrix")) {
                 discountBaselineRepository.save(new DiscountBaseline(newName));
             }
-            String query = "insert into " + newName + " (microcategory_id, location_id, price) values ";
-            for (String row : data.split("\n")) {
-                if (data.isEmpty()) break;
-                counter++;
-                var slt = row.split(",");
-                String microcategory_id, location_id, price;
-                try {
-                    microcategory_id = slt[0];
-                    location_id = slt[1];
-                    price = slt[2];
-                    Integer.parseInt(microcategory_id);
-                    Integer.parseInt(location_id);
-                    if (!price.equals("null")) Double.parseDouble(price);
-                } catch (Exception e) {
-                    notCompletedRows.add(counter);
-                    continue;
+            // Заполнение данными
+            StringBuilder query = new StringBuilder("insert into " + newName + " (microcategory_id, location_id, price) values ");
+            if (!data.isEmpty()) {
+                String[] lines = data.split("\n");
+                for (String row : lines) {
+                    counter++;
+                    var slt = row.split(",");
+                    if (slt.length < 3) {
+                        notCompletedRows.add(counter);
+                        continue;
+                    }
+                    if (!isNumeric(slt[0]) || !isNumeric(slt[1]) || !isNumeric(slt[2])) {
+                        notCompletedRows.add(counter);
+                        continue;
+                    }
+                    query.append("(").append(slt[0]).append(", ").append(slt[1]).append(", ").append(slt[2]).append(")");
+                    if (counter < lines.length) query.append(", ");
                 }
-                query += "(" + microcategory_id + ", " + location_id + ", " + price + "), ";
-//                int count = jdbcTemplate.queryForObject("select count(*) from " + newName + " where microcategory_id=" + microcategory_id + " and location_id=" + location_id, Integer.class);
-//                if (count > 0) {
-//                    jdbcTemplate.update("update " + newName + " SET price=" + price +
-//                            " where microcategory_id=" + microcategory_id + " and location_id=" + location_id);
-//                } else {
-//                    jdbcTemplate.update("insert into " + newName + " (microcategory_id, location_id, price) values (" + microcategory_id + ", " + location_id + ", " + price + ")");
-//                }
+                query.append("ON CONFLICT (microcategory_id, location_id) DO UPDATE SET price = EXCLUDED.price;");
+                jdbcTemplate.update(query.toString());
             }
-            query = query.substring(0, query.length() - 2) + " ";
-            query += "ON CONFLICT (microcategory_id, location_id) DO UPDATE SET price = EXCLUDED.price;";
-            jdbcTemplate.update(query);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{ \"message\": \" Неверный формат тела запроса. \" }");
@@ -125,6 +114,18 @@ public class MatrixController {
                 "{ \"message\": \"Матрица " + newName + " склонирована успешно.\", " +
                         "\"matrixName\": \"" + newName + "\", " +
                         "\"errorValues\": null }");
+    }
+
+    public static boolean isNumeric(String str) {
+        if (str == null || str.isEmpty()) {
+            return false;
+        }
+        for (int i = 0; i < str.length(); i++) {
+            if (!Character.isDigit(str.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private String getNewNameDiscountMatrix() {
