@@ -35,6 +35,7 @@ services:
       PGPASSWORD: Qwerty123
     command: |
       bash -c "
+      rm -rf /var/lib/postgresql/data/*
       until pg_basebackup --pgdata=/var/lib/postgresql/data -R --slot=replication_slot --host=postgres_primary --port=5432
       do
       echo 'Waiting for primary to connect...'
