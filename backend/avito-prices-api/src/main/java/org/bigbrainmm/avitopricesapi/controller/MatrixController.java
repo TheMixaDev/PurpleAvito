@@ -94,7 +94,8 @@ public class MatrixController {
             transactionTemplate.executeWithoutResult(status -> {
                 for (var pair : request.getDiscountSegments()) {
                     DiscountSegment ds = discountSegmentsRepository.findById(pair.getSegmentId()).get();
-                    if (pair.getDiscountMatrixName().equals("null")) ds.setName(null);
+                    if (pair.getDiscountMatrixName() == null) ds.setName(null);
+                    else if (pair.getDiscountMatrixName().equals("null")) ds.setName(null);
                     else ds.setName(pair.getDiscountMatrixName());
                     discountSegmentsRepository.save(ds);
                 }
@@ -105,6 +106,7 @@ public class MatrixController {
                 }
             });
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{ \"message\": \"Нарушена уникальность имён скидочных матриц. 1 - сегмент, одна скидочная матрица или null\" }");
         }
         return new ResponseEntity<>(HttpStatus.OK);
