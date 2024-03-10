@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>org.bigbrainmm</groupId>
-    <artifactId>avito-prices-api</artifactId>
+    <artifactId>avito-admin-api</artifactId>
     <version>0.0.1</version>
-    <name>avito-prices-api</name>
-    <description>avito-prices-api</description>
+    <name>avito-admin-api</name>
+    <description>avito-admin-api</description>
     <properties>
         <java.version>17</java.version>
     </properties>
