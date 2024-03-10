@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface DiscountBaselineRepository extends JpaRepository<DiscountBaseline, Long> {
     DiscountBaseline findByName(String name);
+    DiscountBaseline findFirstByOrderByNameDesc();
 }

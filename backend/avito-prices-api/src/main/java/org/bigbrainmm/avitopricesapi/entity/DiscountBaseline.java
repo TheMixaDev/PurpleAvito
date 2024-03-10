@@ -17,4 +17,8 @@ public class DiscountBaseline {
     private Long id;
     @Column(name = "name")
     private String name;
+
+    public DiscountBaseline(String name) {
+        this.name = name;
+    }
 }
