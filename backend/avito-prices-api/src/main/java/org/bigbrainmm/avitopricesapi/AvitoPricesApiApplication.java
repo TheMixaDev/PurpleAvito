@@ -9,6 +9,7 @@ import org.springframework.jdbc.datasource.init.DataSourceInitializer;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 
 import javax.sql.DataSource;
+import java.util.List;
 
 @SpringBootApplication
 public class AvitoPricesApiApplication {
@@ -22,7 +23,14 @@ public class AvitoPricesApiApplication {
         int count = jdbcTemplate.queryForObject("select COUNT(*) from current_baseline_matrix", Integer.class);
         if (count > 0) return null;
         ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
-        populator.addScript(new ClassPathResource("init_jpa.sql"));
+        populator.addScript(new ClassPathResource("sql_init/00_init.sql"));
+        populator.addScript(new ClassPathResource("sql_init/baseline_matrix_1.sql"));
+        populator.addScript(new ClassPathResource("sql_init/baseline_matrix_2.sql"));
+        populator.addScript(new ClassPathResource("sql_init/baseline_matrix_3.sql"));
+        populator.addScript(new ClassPathResource("sql_init/discount_matrix_1.sql"));
+        populator.addScript(new ClassPathResource("sql_init/discount_matrix_2.sql"));
+        populator.addScript(new ClassPathResource("sql_init/discount_matrix_3.sql"));
+        populator.addScript(new ClassPathResource("sql_init/init_jpa.sql"));
         DataSourceInitializer initializer = new DataSourceInitializer();
         initializer.setDataSource(dataSource);
         initializer.setDatabasePopulator(populator);

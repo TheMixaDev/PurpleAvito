@@ -1,8 +1,3 @@
--- drop table if exists source_baseline;
--- drop table if exists discount_baseline;
--- drop table if exists current_baseline_matrix;
--- drop table if exists discount_segments;
-
 insert into source_baseline (name) values ('baseline_matrix_1'), ('baseline_matrix_2'), ('baseline_matrix_3');
 insert into discount_baseline (name) values ('discount_matrix_1'), ('discount_matrix_2'), ('discount_matrix_3');
 insert into current_baseline_matrix (id, name) values (1, 'baseline_matrix_1');
