@@ -61,19 +61,24 @@ public class MatrixController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @PostMapping(value = "/setup/segment", produces = "application/json")
-    @Operation(summary = "Установить в дискаунт группе матрицу по id сгемента и name discount_table")
-    public ResponseEntity<String> setupSegment(@RequestBody SetupDiscountSegmentRequest request) {
-        Optional<DiscountSegment> discountSegment = discountSegmentsRepository.findById(request.getId());
-        if (discountSegment.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("{ \"message\": \"Сегмент с таким идентификатором не найден\" }");
+    @PostMapping(value = "/setup/segments", produces = "application/json")
+    @Operation(summary = "Установить в дискаунт группах матрицы по id сгемента и name discount_table")
+    public ResponseEntity<String> setupSegment(@RequestBody SetupDiscountSegmentsRequest request) {
+        if (request.getDiscountSegment().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("{ \"message\": \"Список сегментов пуст\" }");
         }
-        DiscountBaseline discountBaseline = discountBaselineRepository.findByName(request.getName());
-        if (discountBaseline == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("{ \"message\": \"Матрица с таким именем не найдена\" }");
+        for (var pair : request.getDiscountSegment()) {
+            Optional<DiscountSegment> discountSegment = discountSegmentsRepository.findById(pair.getSegmentId());
+            if (discountSegment.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("{ \"message\": \"Сегмент с идентификатором " + pair.getSegmentId() + " не найден\" }");
+            }
+            DiscountBaseline discountBaseline = discountBaselineRepository.findByName(pair.getDiscountMatrixName());
+            if (discountBaseline == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("{ \"message\": \"Матрица с именем " + pair.getDiscountMatrixName() + " не найдена\" }");
+            }
+            discountSegment.get().setName(discountBaseline.getName());
+            discountSegmentsRepository.save(discountSegment.get());
         }
-        discountSegment.get().setName(discountBaseline.getName());
-        discountSegmentsRepository.save(discountSegment.get());
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }
