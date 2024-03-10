@@ -100,6 +100,8 @@ public class MatrixController {
                     discountSegmentsRepository.save(ds);
                 }
                 for (var pair : request.getDiscountSegments()) {
+                    if (pair.getDiscountMatrixName() == null) continue;
+                    if (pair.getDiscountMatrixName().equals("null")) continue;
                     if (discountSegmentsRepository.findAllByName(pair.getDiscountMatrixName()).size() > 1) {
                         throw new RuntimeException();
                     }
