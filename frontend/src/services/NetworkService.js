@@ -12,12 +12,13 @@ export const NetworkService = {
      * @param {function} success - The callback function to be executed if the request is successful.
      * @param {function} fail - The callback function to be executed if the request fails.
      */
-    ClassicRequest(method, url, data, success, fail) {
+    ClassicRequest(method, url, data, success, fail, contentType = "application/json") {
         (async () => {
             let response = await axios({
                 method: method,
                 url: `${configuration.serverUrl}${url}`,
-                data: data
+                data: data,
+                headers: {'Content-Type': contentType}
             }).catch(fail);
             if(response)
                 success(response);

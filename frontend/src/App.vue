@@ -8,6 +8,7 @@ import LockIcon from './assets/icons/sidepanel/LockIcon.vue';
 import UISideButton from './components/ui/UISideButton.vue';
 import UIButton from './components/ui/UIButton.vue';
 import { ModalsContainer } from 'vue-final-modal';
+import UILoading from './components/ui/UILoading.vue';
 </script>
 
 <template>
@@ -82,6 +83,7 @@ import { ModalsContainer } from 'vue-final-modal';
       <RouterView />
     </main>
   </div>
+  <UILoading v-if="SettingsStore" v-model="SettingsStore.loading" style="position: fixed"/>
   <ModalsContainer />
   <notifications class="p-3" position="top right">
       <template #body="props">

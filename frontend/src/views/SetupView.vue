@@ -81,7 +81,6 @@ import { FrontendService } from '@/services/FrontendService';
 
 <script>
 const SettingsStore = useSettingsStore();
-let locked = true; // TODO make loading with it
 export default {
     name: "SetupView",
     data() {
@@ -123,7 +122,6 @@ export default {
             this.changed = SettingsStore.segments.segments.some(item => item.changed);
         },
         setSegment(segment) {
-            // TODO TEST
             MatrixService.setSegment(segment.id, segment.name, () => {
                 segment.changed = false;
                 this.checkIsChanged();
@@ -131,7 +129,6 @@ export default {
             }, () => this.$notify({type: 'error', text: 'Произошла ошибка при обновлении сегмента'}));
         },
         setAllSegments() {
-            // TODO TEST
             let updating = SettingsStore.segments.segments
                 .filter(item => item.changed)
                 .map(item => ({ segmentId: item.id, discountMatrixName: item.name }));
@@ -150,9 +147,7 @@ export default {
         }
     },
     beforeCreate() {
-        SettingsStore.updateSettings(() => {
-            locked = false;
-        });
+        SettingsStore.updateSettings();
     }
 }
 </script>

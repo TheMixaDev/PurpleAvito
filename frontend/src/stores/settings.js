@@ -42,7 +42,7 @@ export const useSettingsStore = defineStore('settings', () => {
         )
     }
 
-    function updateSettings(success, fail) {
+    function updateSettings(success = () => {}, fail = () => {}) {
         if (Date.now() - lastUpdate.value > configuration.settingsUpdate) {
             loading.value = true;
             lastUpdate.value = Date.now();

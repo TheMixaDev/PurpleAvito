@@ -27,5 +27,12 @@ export const MatrixService = {
             {discountSegments: segments}, response => {
             success(response.data);
         }, fail);
+    },
+    createMatrix: (parent, content, success, fail) => {
+        if(!parent) parent = "discount_matrix_new";
+        NetworkService.ClassicRequest("POST", `matrices/${parent}`,
+            content, response => {
+            success(response.data);
+        }, fail, "text/plain");
     }
 }

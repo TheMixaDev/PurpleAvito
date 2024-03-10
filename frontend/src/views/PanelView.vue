@@ -7,12 +7,12 @@ import TableComponent from '@/components/TableComponent.vue';
 
 import { FrontendService } from '@/services/FrontendService';
 import UIDropdownWithSearch from '@/components/ui/UIDropdownWithSearch.vue';
-import { Pagination } from '@/models/pagination';
 import { MatrixItem } from '@/models/matrixItem';
 import UILabeledInput from '@/components/ui/UILabeledInput.vue';
 import UISetupButton from '@/components/ui/UISetupButton.vue';
 import { useSettingsStore } from '@/stores/settings';
 import { useNewMatrixStore } from '@/stores/newMatrix';
+import { MatrixService } from '@/services/MatrixService';
 </script>
 <template>
     <section>
@@ -24,7 +24,7 @@ import { useNewMatrixStore } from '@/stores/newMatrix';
         <div class="p-4">
             <div class="mx-auto max-w-screen-xl p-3 px-4 lg:px-12">
                 <p class="mb-2 text-center">
-                    Отсутствие родительской матрицы создает новую пустую матрицу.
+                    Отсутствие родительской матрицы создает новую пустую скидочную матрицу.
                     <UIButton class="ml-2" color="danger" @click="parentMatrix = 0" :disabled="!parentMatrix">
                         Сбросить матрицу
                     </UIButton>
@@ -50,27 +50,32 @@ import { useNewMatrixStore } from '@/stores/newMatrix';
                 :loadCount="NewMatrixStore.pagination.itemsPerPage"
                 :columns="['ID категории', 'ID локации', 'Цена', 'Действие']"
                 >
-                <UITableRow v-for="(item, index) in NewMatrixStore.display" :key="index">
+                <UITableRow v-for="(item, index) in NewMatrixStore.display" :key="index"
+                    :class="!item.microcategory_id || item.microcategory_id.length < 1 || item.microcategory_id == '0' ||
+                            !item.location_id || item.location_id.length < 1 || item.location_id == '0' ? `bg-danger-200` : ``">
                     <UITableCell>
                         <UILabeledInput
                             v-model="item.microcategory_id"
                             type="number"
+                            :disabled="matrixPublishing"
                             />
                     </UITableCell>
                     <UITableCell>
                         <UILabeledInput
                             v-model="item.location_id"
                             type="number"
+                            :disabled="matrixPublishing"
                             />
                     </UITableCell>
                     <UITableCell>
                         <UILabeledInput
                             v-model="item.price"
                             type="number"
+                            :disabled="matrixPublishing"
                             />
                     </UITableCell>
                     <UITableCell>
-                        <UIButton color="danger" @click="NewMatrixStore.deleteElement(index)">
+                        <UIButton color="danger" @click="NewMatrixStore.deleteElement(index)" :disabled="matrixPublishing">
                             <font-awesome-icon :icon="['fas', 'trash']"/>
                             Удалить
                         </UIButton>
@@ -81,11 +86,11 @@ import { useNewMatrixStore } from '@/stores/newMatrix';
                 <p class="text-center">
                     {{ (parentMatrix != 0 ? `Измененных` : `Всего`) }} строк матрицы - {{ NewMatrixStore.items.length }}
                 </p>
-                <UIButton color="primary" class="mt-4 w-full z-0" @click="selectFile">
+                <UIButton color="primary" class="mt-4 w-full z-0" @click="selectFile" :disabled="fileLoading || matrixPublishing">
                     <font-awesome-icon :icon="['fas', 'download']"/>
                     Загрузить из файла
                 </UIButton>
-                <UIButton color="secondary" class="mt-4 w-full z-0" :disabled="NewMatrixStore.items.length < 1">
+                <UIButton color="secondary" class="mt-4 w-full z-0" :disabled="NewMatrixStore.items.length < 1 || fileLoading || matrixPublishing" @click="createMatrix">
                     <font-awesome-icon :icon="['fas', 'plus']"/>
                     {{ (parentMatrix != 0 ? `Клонировать` : `Создать`) }} матрицу ({{ (parentMatrix != 0 && SettingsStore.matrices[parentMatrix].startsWith("baseline") ? `Основная` : `Скидочная`) }})
                 </UIButton>
@@ -97,21 +102,15 @@ import { useNewMatrixStore } from '@/stores/newMatrix';
 <script>
 const SettingsStore = useSettingsStore();
 const NewMatrixStore = useNewMatrixStore();
-let pagination = new Pagination(0, 10, 0);
-pagination.total = 100;
-pagination.itemsPerPage = 10;
-let locked = true; // TODO make loading with it
 export default {
     name: "PanelView",
     data() {
         return {
             loading: false,
+            fileLoading: false,
+            matrixPublishing: false,
 
-            parentMatrix: 0,
-            items: [
-                new MatrixItem(13, 14, 71),
-                new MatrixItem(25, 22, 122)
-            ]
+            parentMatrix: 0
         }
     },
     computed: {
@@ -127,6 +126,7 @@ export default {
             let input = document.createElement('input');
             input.type = 'file';
             input.onchange = e => {
+                this.fileLoading = true;
                 let file = e.target.files[0];
                 let reader = new FileReader();
                 reader.onload = e => {
@@ -176,22 +176,65 @@ export default {
                     this.$notify({type: 'success', text: `Загружено ${sucessful} из ${lines} элементов`});
                     if(NewMatrixStore.items.length > 0) {
                         FrontendService.showFileModal(
-                            () => NewMatrixStore.addItems(parsed), () => {
+                            () => {
+                                NewMatrixStore.addItems(parsed, () => this.fileLoading = false);
+                            }, () => {
                                 NewMatrixStore.clear();
-                                NewMatrixStore.addItems(parsed);
+                                NewMatrixStore.addItems(parsed, () => this.fileLoading = false);
                         });
-                    } else
-                        NewMatrixStore.addItems(parsed);
+                    } else {
+                        NewMatrixStore.addItems(parsed, () => this.fileLoading = false);
+                    }
                 };
                 reader.readAsText(file);
             };
             input.click();
+        },
+        redirectToError(index) {
+            this.$notify({type: 'error', text: `Некорректное значение в строке ${index * 1 + 1}`});
+            NewMatrixStore.updateSearch("");
+            NewMatrixStore.applySearch();
+            NewMatrixStore.pagination.updatePage(Math.floor(index * 1 / 10) + 1);
+            NewMatrixStore.handleSegmentsPageChange();
+            this.matrixPublishing = false;
+        },
+        createMatrix() {
+            this.matrixPublishing = true;
+            setTimeout((async () => {
+                let result = [];
+                for(let index in NewMatrixStore.items) {
+                    let item = NewMatrixStore.items[index];
+                    try {
+                        let microcategory_id = FrontendService.valueParser(item.microcategory_id);
+                        let location_id = FrontendService.valueParser(item.location_id);
+                        let price = FrontendService.valueParser(item.price);
+                        if(!microcategory_id || !location_id)
+                            return this.redirectToError(index);
+                        result.push(`${microcategory_id},${location_id},${price}`);
+                    } catch {
+                        return this.redirectToError(index);
+                    }
+                }
+                MatrixService.createMatrix(this.parentMatrix, result.join("\n"), data => {
+                    this.$notify({type: 'success', text: data.message});
+                    SettingsStore.dropUpdate();
+                    SettingsStore.updateSettings(() => {
+                        NewMatrixStore.clear();
+                        this.parentMatrix = data.matrixName;
+                        this.matrixPublishing = false;
+                    }, () => {
+                        this.$notify({type: 'error', text: 'Произошла ошибка при обновлении данных'});
+                        this.matrixPublishing = false;
+                    });
+                }, () => {
+                    this.$notify({type: 'error', text: 'Произошла ошибка при создании матрицы'});
+                    this.matrixPublishing = false;
+                })
+            }), 0);
         }
     },
     beforeCreate() {
-        SettingsStore.updateSettings(() => {
-            locked = false;
-        });
+        SettingsStore.updateSettings();
     }
 }
 </script>

@@ -15,10 +15,10 @@ import { VueFinalModal } from 'vue-final-modal'
                     В таблице уже содержатся данные. Хотите ли вы добавить данные из файла или заменить ими таблицу?
                 </p>
                 <div class="flex justify-center items-center space-x-4">
-                    <UIButton color="gray" classExtension="text-black dark:text-white" @click="$emit('clone')">
+                    <UIButton color="gray" classExtension="text-black dark:text-white" @click="process('clone')" :disabled="processing">
                         Заменить
                     </UIButton>
-                    <UIButton color="secondary" @click="$emit('add')">
+                    <UIButton color="secondary" @click="process('add')" :disabled="processing">
                         Добавить
                     </UIButton>
                 </div>
@@ -31,6 +31,17 @@ import { VueFinalModal } from 'vue-final-modal'
 export default {
     name: "PromptFileModal",
     props: ['text'],
-    emits: ['add', 'clone']
+    emits: ['add', 'clone'],
+    data() {
+        return  {
+            processing: false
+        }
+    },
+    methods: {
+        process(event) {
+            this.processing = true;
+            this.$emit(event)
+        }
+    }
 }
 </script>

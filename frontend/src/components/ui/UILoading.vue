@@ -5,13 +5,13 @@ import 'vue-loading-overlay/dist/css/index.css';
 <template>
     <loading v-model:active="mutatedModel"
         :can-cancel="false"
-        :is-full-page="false"
+        :is-full-page="true"
         :height="75"
         :width="160"
         color="#fff"
         loader="bars"
-        transition="none"
-        class="animate-fade animate-once animate-duration-100 animate-ease-out"
+        transition="fade"
+        class="animate-fade animate-duration-500 animate-ease-out"
         background-color="#000"
         />
 </template>

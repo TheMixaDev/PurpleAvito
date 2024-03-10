@@ -59,9 +59,13 @@ export const useNewMatrixStore = defineStore('newMatrix', () => {
         applySearch();
     }
 
-    function addItems(newItems) {
-        items.value.push(...newItems);
-        applySearch();
+    function addItems(newItems, callback) {
+        setTimeout(async () => {
+            for(let i of newItems)
+                items.value.push(i);
+            applySearch();
+            callback();
+        }, 0);
     }
 
     return {
