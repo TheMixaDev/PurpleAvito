@@ -6,6 +6,8 @@ import PageIcon from './assets/icons/sidepanel/PageIcon.vue';
 import AddIcon from './assets/icons/sidepanel/AddIcon.vue';
 import LockIcon from './assets/icons/sidepanel/LockIcon.vue';
 import UISideButton from './components/ui/UISideButton.vue';
+import UIButton from './components/ui/UIButton.vue';
+import { ModalsContainer } from 'vue-final-modal';
 </script>
 
 <template>
@@ -41,6 +43,11 @@ import UISideButton from './components/ui/UISideButton.vue';
               alt="Avito Logo"
             />
             <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">Avito панель администратора</span>
+            <UIButton
+              @click="updateData()"
+              class="ml-2">
+              Обновить данные
+            </UIButton>
           </a>
         </div>
       </div>
@@ -75,10 +82,35 @@ import UISideButton from './components/ui/UISideButton.vue';
       <RouterView />
     </main>
   </div>
-  <notifications class="p-3" position="top left">
+  <ModalsContainer />
+  <notifications class="p-3" position="top right">
       <template #body="props">
           <NotificationModal :data="props"/>
       </template>
   </notifications>
 </template>
 
+<script>
+import { useSettingsStore } from '@/stores/settings';
+
+export default {
+    name: "App",
+    data() {
+      return {
+        SettingsStore: null,
+      }
+    },
+    methods: {
+        updateData() {
+            this.SettingsStore.dropUpdate();
+            this.SettingsStore.updateSettings(
+              () => this.$notify({type: 'success', text: 'Данные обновлены'}),
+              () => this.$notify({type: 'error', text: 'Произошла ошибка при обновлении данных'})
+            );
+        }
+    },
+    mounted() {
+        this.SettingsStore = useSettingsStore();
+    }
+}
+</script>

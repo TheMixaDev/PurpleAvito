@@ -3,6 +3,7 @@ import 'vue-final-modal/style.css'
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+import { createVfm } from 'vue-final-modal'
 
 import App from './App.vue'
 import router from './router'
@@ -18,6 +19,7 @@ const app = createApp(App)
 
 app.component('font-awesome-icon', FontAwesomeIcon)
 app.use(createPinia())
+app.use(createVfm())
 app.use(router)
 app.use(VueCookies, { expires: '30d' })
 app.use(Notifications)

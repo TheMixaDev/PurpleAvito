@@ -1,6 +1,8 @@
 import { configuration } from "@/assets/configuration";
+import WarningModal from "@/components/modal/WarningModal.vue";
 
 import moment from "moment";
+import { useModal } from "vue-final-modal";
 
 export const FrontendService = {
     /**
@@ -27,5 +29,21 @@ export const FrontendService = {
             loadingToggler();
             component.$notify({type: 'error', text: 'Произошла ошибка при загрузке данных'});
         });
+    },
+    showWarningModal(text, proceed) {
+        const modal = useModal({
+            component: WarningModal,
+            attrs: {
+                text,
+                onClose() {
+                    modal.close();
+                },
+                onProceed() {
+                    modal.close();
+                    proceed();
+                }
+            }
+        });
+        modal.open();
     }
 }

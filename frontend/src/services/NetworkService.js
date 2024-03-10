@@ -1,26 +1,8 @@
 import { configuration } from "@/assets/configuration";
 
-import { useAuthStore } from "@/stores/user";
-import router from "@/router";
-
 import axios from "axios";
 
 export const NetworkService = {
-    /**
-     * Handles unauthorized error requests. If user is not logged in, redirects to login page.
-     *
-     * @param {Object} cookies - The cookies to be used for logging out.
-     * @param {Object} error - The error data.
-     * @param {function} fail - The callback function to be executed if the reason of failure is not "unauthorized".
-     */
-    handleUnauthorized(cookies, error, fail) {
-        if(error.request.status == 401) {
-            const AuthStorage = useAuthStore();
-            AuthStorage.logout(cookies);
-            return router.push({ name: "auth" });
-        }
-        fail();
-    },
     /**
      * Executes a HTTP request using Axios.
      *
