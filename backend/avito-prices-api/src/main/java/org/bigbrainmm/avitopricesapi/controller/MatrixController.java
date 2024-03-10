@@ -81,8 +81,7 @@ public class MatrixController {
             if (discountSegment.isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("{ \"message\": \"Сегмент с идентификатором " + pair.getSegmentId() + " не найден\" }");
             discountBaseline = discountBaselineRepository.findByName(pair.getDiscountMatrixName());
-            if (pair.getDiscountMatrixName().equals("null")) discountSegment.get().setName("null");
-            else {
+            if (pair.getDiscountMatrixName() != null || !pair.getDiscountMatrixName().equals("null")) {
                 if (discountBaseline == null) return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body("{ \"message\": \"Матрица с именем " + pair.getDiscountMatrixName() + " не найдена\" }");
                 discountSegment.get().setName(discountBaseline.getName());
@@ -93,7 +92,8 @@ public class MatrixController {
             transactionTemplate.executeWithoutResult(status -> {
                 for (var pair : request.getDiscountSegments()) {
                     DiscountSegment ds = discountSegmentsRepository.findById(pair.getSegmentId()).get();
-                    ds.setName(pair.getDiscountMatrixName());
+                    if (pair.getDiscountMatrixName().equals("null")) ds.setName(null);
+                    else ds.setName(pair.getDiscountMatrixName());
                     discountSegmentsRepository.save(ds);
                 }
                 for (var pair : request.getDiscountSegments()) {
