@@ -85,7 +85,7 @@ export default {
                 segment.changed = false;
                 this.checkIsChanged();
                 this.$notify({type: 'success', text: 'Сегмент обновлен'});
-            }, () => this.$notify({type: 'error', text: 'Произошла ошибка при обновлении сегмента'}));
+            }, error => this.$notify({type: 'error', text: error.response.data.message}));
         },
         setAllSegments() {
             let updating = SettingsStore.segments.segments
@@ -95,7 +95,7 @@ export default {
                 MatrixService.setSegments(updating, () => {
                     this.forceUpdate();
                     this.$notify({type: 'success', text: 'Сегменты обновлены'});
-                }, () => this.$notify({type: 'error', text: 'Произошла ошибка при обновлении сегментов'}));
+                }, error => this.$notify({type: 'error', text: error.response.data.message}));
             }
         },
         forceUpdate() {
