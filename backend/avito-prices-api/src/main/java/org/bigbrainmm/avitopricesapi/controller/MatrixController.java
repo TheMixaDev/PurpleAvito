@@ -108,7 +108,6 @@ public class MatrixController {
                 }
             });
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{ \"message\": \"Нарушена уникальность имён скидочных матриц. 1 - сегмент, одна скидочная матрица или null\" }");
         }
         return new ResponseEntity<>(HttpStatus.OK);
