@@ -25,9 +25,11 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.print.attribute.standard.Media;
 import javax.print.attribute.standard.MediaTray;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Stack;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @RequestMapping("/api/matrices")
@@ -51,41 +53,50 @@ public class MatrixController {
         return allMatrixRequest;
     }
 
-    @Transactional
-    @PostMapping(value = "/{matrix_name}", produces = "application/json")
-    @Operation(summary = "Установить изменения в матрице из CSV файла")
-    public ResponseEntity<String> setChangesInMatrix(@PathVariable("matrix_name") String name, @RequestBody String data) {
+    @PostMapping(value = "/{matrix_name}", produces = "application/json", consumes = MediaType.TEXT_PLAIN_VALUE)
+    @Operation(summary = "Установить изменения в матрице из CSV файла. discount_matrix_new - создает новую чистую матрицу. data - если пуст, то изменений не будет.")
+    public ResponseEntity<String> setChangesInMatrix(@PathVariable("matrix_name") String name, @RequestBody(required = false) String data) {
         String newName;
+        if (data == null) data = "";
         if (name.contains("baseline_matrix")) {
             if (sourceBaselineRepository.findByName(name) == null)
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{ \"message\": \"Матрицы с таким именем не существует\" }");
-            SourceBaseline sourceBaseline = sourceBaselineRepository.findFirstByOrderByNameDesc();
-            int id = 0;
-            try {
-                if (sourceBaseline != null) id = Integer.parseInt(sourceBaseline.getName().split("_")[2]);
-            } catch (Exception ignored) { }
-            id++;
-            newName = "discount_matrix_" + id;
+            newName = getNewNameBaselineMatrix();
+        } else if (name.equals("discount_matrix_new")) {
+            newName = getNewNameDiscountMatrix();
         } else if (name.contains("discount_matrix")) {
             if (discountBaselineRepository.findByName(name) == null)
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{ \"message\": \"Матрицы с таким именем не существует\" }");
-            DiscountBaseline discountBaseline = discountBaselineRepository.findFirstByOrderByNameDesc();
-            int id = 0;
-            try {
-                if (discountBaseline != null) id = Integer.parseInt(discountBaseline.getName().split("_")[2]);
-            } catch (Exception ignored) { }
-            id++;
-            newName = "discount_matrix_" + id;
+            newName = getNewNameDiscountMatrix();
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{ \"message\": \"Неверное имя матрицы\" }");
         }
+        List<Integer> notCompletedRows = new ArrayList<>();
         try {
-            jdbcTemplate.update("create table " + newName + " as select * from " + name);
+            int counter = 0;
+            if (name.equals("discount_matrix_new")) jdbcTemplate.update("create table " + newName + " (microcategory_id int, location_id int, price int);");
+            else jdbcTemplate.update("create table " + newName + " as select * from " + name);
+            if (name.contains("baseline_matrix")) {
+                sourceBaselineRepository.save(new SourceBaseline(newName));
+            } else if (name.contains("discount_matrix")) {
+                discountBaselineRepository.save(new DiscountBaseline(newName));
+            }
             for (String row : data.split("\n")) {
+                if (data.isEmpty()) break;
+                counter++;
                 var slt = row.split(",");
-                String microcategory_id = slt[0];
-                String location_id = slt[1];
-                String price = slt[2];
+                String microcategory_id, location_id, price;
+                try {
+                    microcategory_id = slt[0];
+                    location_id = slt[1];
+                    price = slt[2];
+                    Integer.parseInt(microcategory_id);
+                    Integer.parseInt(location_id);
+                    if (!price.equals("null")) Double.parseDouble(price);
+                } catch (Exception e) {
+                    notCompletedRows.add(counter);
+                    continue;
+                }
                 int count = jdbcTemplate.queryForObject("select count(*) from " + newName + " where microcategory_id=" + microcategory_id + " and location_id=" + location_id, Integer.class);
                 if (count > 0) {
                     jdbcTemplate.update("update " + newName + " SET price=" + price +
@@ -94,16 +105,30 @@ public class MatrixController {
                     jdbcTemplate.update("insert into " + newName + " (microcategory_id, location_id, price) values (" + microcategory_id + ", " + location_id + ", " + price + ")");
                 }
             }
-            if (name.contains("baseline_matrix")) {
-                sourceBaselineRepository.save(new SourceBaseline(newName));
-            } else if (name.contains("discount_matrix")) {
-                discountBaselineRepository.save(new DiscountBaseline(newName));
-            }
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{ \"message\": \" Неверный формат тела запроса. \" }");
         }
-        return ResponseEntity.ok("{ \"message\": \"Матрица " + newName + " склонирована с изменениями успешно\" }");
+        if (!notCompletedRows.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.OK).body(
+                    "{ \"message\": \"Матрица склонирована, но не все строки были применены.\", " +
+                    "\"matrixName\": \"" + newName + "\", " +
+                    "\"errorValues\": \"Неверные значения в строках: " + notCompletedRows.stream().map(String::valueOf).collect(Collectors.joining(", ")) + "\" }");
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(
+                "{ \"message\": \"Матрица " + newName + " склонирована успешно.\", " +
+                        "\"matrixName\": \"" + newName + "\", " +
+                        "\"errorValues\": null }");
+    }
+
+    private String getNewNameDiscountMatrix() {
+        Long id = discountBaselineRepository.findMaxId();
+        return "discount_matrix_" + (id + 1L);
+    }
+
+    private String getNewNameBaselineMatrix() {
+        Long id = sourceBaselineRepository.findMaxId();
+        return "baseline_matrix_" + (id + 1L);
     }
 
     @GetMapping(value = "/setup", produces = "application/json")
