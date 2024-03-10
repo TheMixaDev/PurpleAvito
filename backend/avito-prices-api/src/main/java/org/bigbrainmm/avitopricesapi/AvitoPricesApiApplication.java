@@ -23,7 +23,8 @@ public class AvitoPricesApiApplication {
         int count = jdbcTemplate.queryForObject("select COUNT(*) from current_baseline_matrix", Integer.class);
         if (count > 0) return null;
         ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
-        populator.addScript(new ClassPathResource("sql_init/00_init.sql"));
+        count = jdbcTemplate.queryForObject("select count(*) from pg_user where usename='replicator';", Integer.class);
+        if (count == 0) populator.addScript(new ClassPathResource("sql_init/00_init.sql"));
         populator.addScript(new ClassPathResource("sql_init/baseline_matrix_1.sql"));
         populator.addScript(new ClassPathResource("sql_init/baseline_matrix_2.sql"));
         populator.addScript(new ClassPathResource("sql_init/baseline_matrix_3.sql"));
