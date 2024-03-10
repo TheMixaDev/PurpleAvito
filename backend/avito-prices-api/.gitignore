@@ -5,7 +5,6 @@ HELP.md
 !**/src/test/**/target/
 
 /target/*
-!/target/*.jar
 
 ### STS ###
 .apt_generated

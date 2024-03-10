@@ -81,10 +81,12 @@ public class MatrixController {
             if (discountSegment.isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("{ \"message\": \"Сегмент с идентификатором " + pair.getSegmentId() + " не найден\" }");
             discountBaseline = discountBaselineRepository.findByName(pair.getDiscountMatrixName());
-            if (pair.getDiscountMatrixName() != null || !pair.getDiscountMatrixName().equals("null")) {
-                if (discountBaseline == null) return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body("{ \"message\": \"Матрица с именем " + pair.getDiscountMatrixName() + " не найдена\" }");
-                discountSegment.get().setName(discountBaseline.getName());
+            if (pair.getDiscountMatrixName() != null) {
+                if (!pair.getDiscountMatrixName().equals("null")) {
+                    if (discountBaseline == null) return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                            .body("{ \"message\": \"Матрица с именем " + pair.getDiscountMatrixName() + " не найдена\" }");
+                    discountSegment.get().setName(discountBaseline.getName());
+                }
             }
         }
         try {
@@ -98,8 +100,7 @@ public class MatrixController {
                 }
                 for (var pair : request.getDiscountSegments()) {
                     if (discountSegmentsRepository.findAllByName(pair.getDiscountMatrixName()).size() > 1) {
-                        status.setRollbackOnly();
-                        return;
+                        throw new RuntimeException();
                     }
                 }
             });
