@@ -76,11 +76,13 @@ public class MatrixController {
             int counter = 0;
             if (name.equals("discount_matrix_new")) jdbcTemplate.update("create table " + newName + " (microcategory_id int, location_id int, price int);");
             else jdbcTemplate.update("create table " + newName + " as select * from " + name);
+            jdbcTemplate.update("ALTER TABLE " + newName + " ADD CONSTRAINT " + newName + "_pkey PRIMARY KEY (location_id, microcategory_id);");
             if (name.contains("baseline_matrix")) {
                 sourceBaselineRepository.save(new SourceBaseline(newName));
             } else if (name.contains("discount_matrix")) {
                 discountBaselineRepository.save(new DiscountBaseline(newName));
             }
+            String query = "insert into " + newName + " (microcategory_id, location_id, price) values ";
             for (String row : data.split("\n")) {
                 if (data.isEmpty()) break;
                 counter++;
@@ -97,14 +99,18 @@ public class MatrixController {
                     notCompletedRows.add(counter);
                     continue;
                 }
-                int count = jdbcTemplate.queryForObject("select count(*) from " + newName + " where microcategory_id=" + microcategory_id + " and location_id=" + location_id, Integer.class);
-                if (count > 0) {
-                    jdbcTemplate.update("update " + newName + " SET price=" + price +
-                            " where microcategory_id=" + microcategory_id + " and location_id=" + location_id);
-                } else {
-                    jdbcTemplate.update("insert into " + newName + " (microcategory_id, location_id, price) values (" + microcategory_id + ", " + location_id + ", " + price + ")");
-                }
+                query += "(" + microcategory_id + ", " + location_id + ", " + price + "), ";
+//                int count = jdbcTemplate.queryForObject("select count(*) from " + newName + " where microcategory_id=" + microcategory_id + " and location_id=" + location_id, Integer.class);
+//                if (count > 0) {
+//                    jdbcTemplate.update("update " + newName + " SET price=" + price +
+//                            " where microcategory_id=" + microcategory_id + " and location_id=" + location_id);
+//                } else {
+//                    jdbcTemplate.update("insert into " + newName + " (microcategory_id, location_id, price) values (" + microcategory_id + ", " + location_id + ", " + price + ")");
+//                }
             }
+            query = query.substring(0, query.length() - 2) + " ";
+            query += "ON CONFLICT (microcategory_id, location_id) DO UPDATE SET price = EXCLUDED.price;";
+            jdbcTemplate.update(query);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{ \"message\": \" Неверный формат тела запроса. \" }");

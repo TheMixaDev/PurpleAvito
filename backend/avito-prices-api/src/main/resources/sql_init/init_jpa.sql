@@ -1,6 +1,15 @@
 insert into source_baseline (name) values ('baseline_matrix_1'), ('baseline_matrix_2'), ('baseline_matrix_3');
 insert into discount_baseline (name) values ('discount_matrix_1'), ('discount_matrix_2'), ('discount_matrix_3');
 insert into current_baseline_matrix (id, name) values (1, 'baseline_matrix_1');
+
+ALTER TABLE baseline_matrix_1 ADD CONSTRAINT baseline_matrix_1_pkey PRIMARY KEY (location_id, microcategory_id);
+ALTER TABLE baseline_matrix_2 ADD CONSTRAINT baseline_matrix_2_pkey PRIMARY KEY (location_id, microcategory_id);
+ALTER TABLE baseline_matrix_3 ADD CONSTRAINT baseline_matrix_3_pkey PRIMARY KEY (location_id, microcategory_id);
+ALTER TABLE discount_matrix_1 ADD CONSTRAINT discount_matrix_1_pkey PRIMARY KEY (location_id, microcategory_id);
+ALTER TABLE discount_matrix_2 ADD CONSTRAINT discount_matrix_2_pkey PRIMARY KEY (location_id, microcategory_id);
+ALTER TABLE discount_matrix_3 ADD CONSTRAINT discount_matrix_3_pkey PRIMARY KEY (location_id, microcategory_id);
+
+
 insert into discount_segments (id, name)
 values (156, 'discount_matrix_1'),
        (278, 'discount_matrix_2'),
