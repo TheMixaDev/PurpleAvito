@@ -44,6 +44,7 @@ import { MatrixService } from '@/services/MatrixService';
                 v-model:search="NewMatrixStore.search"
                 :pagination="NewMatrixStore.pagination"
                 :clearEnabled="true"
+                :clearState="NewMatrixStore.items.length > 0"
                 @clearClick="NewMatrixStore.clear"
                 @creationClick="NewMatrixStore.createElement"
                 @pageChange="NewMatrixStore.handleSegmentsPageChange"
