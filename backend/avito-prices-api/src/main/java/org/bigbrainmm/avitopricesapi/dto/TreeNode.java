@@ -53,6 +53,19 @@ public class TreeNode {
         }
     }
 
+    public TreeNode getById(Long id) {
+        if (this.id.equals(id)) {
+            return this;
+        }
+        for (TreeNode sn : subNodes) {
+            TreeNode found = sn.getById(id);
+            if (found != null) {
+                return found;
+            }
+        }
+        return null;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

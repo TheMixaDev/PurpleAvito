@@ -10,6 +10,6 @@ public class LoadTrees {
     @PostConstruct
     public void load() {
         StaticStorage.microCategoryRoot = TreeNode.buildTreeFromFile("microcategories.txt");
-        StaticStorage.locationRoot = TreeNode.buildTreeFromFile("locations.txt");
+        StaticStorage.locationsRoot = TreeNode.buildTreeFromFile("locations.txt");
     }
 }

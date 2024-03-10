@@ -16,5 +16,5 @@ import java.util.Map;
 @Schema(description = "Пользователи и скидочные сегменты к ним")
 public class UserSegments {
     @Schema(description = "id пользователя -> список id скидочных сегментов, относящихся к пользователю", example = "[168, 290, 412]")
-    private Map<Integer, List<Integer>> userSegments;
+    private Map<Long, List<Long>> userSegments;
 }

@@ -6,7 +6,7 @@ import org.bigbrainmm.avitopricesapi.dto.UserSegments;
 
 public class StaticStorage {
     public static TreeNode microCategoryRoot;
-    public static TreeNode locationRoot;
+    public static TreeNode locationsRoot;
     public static BaselineMatrixAndSegments baselineMatrixAndSegments;
     public static UserSegments userSegments;
 }

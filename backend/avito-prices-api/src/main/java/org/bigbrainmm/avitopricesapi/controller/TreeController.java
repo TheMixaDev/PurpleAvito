@@ -24,6 +24,6 @@ public class TreeController {
     @Operation(summary = "Посмотреть дерево локаций")
     @GetMapping(value = "/locations" , produces = "application/json")
     public TreeNode getLocationsTree() {
-        return StaticStorage.locationRoot;
+        return StaticStorage.locationsRoot;
     }
 }
