@@ -46,12 +46,25 @@ services:
       postgres
       "
     depends_on:
-      - app
-  app:
-    container_name: spring_demo
-    build: .
+      - avito_admin_api
+  avito_admin_api:
+    container_name: avito_admin_api
+    build: ./avito-admin-api
+    restart: always
     ports:
       - "8080:8080"
+    depends_on:
+      - postgres_primary
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres_primary:5432/avito_db
+      - SPRING_DATASOURCE_USERNAME=hulumulu
+      - SPRING_DATASOURCE_PASSWORD=Qwerty123
+  avito_prices_api:
+    container_name: avito_prices_api
+    build: ./avito-prices-api
+    restart: always
+    ports:
+      - "8081:8081"
     depends_on:
       - postgres_primary
     environment:

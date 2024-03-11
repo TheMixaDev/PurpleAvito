@@ -10,7 +10,7 @@
     </parent>
     <groupId>org.bigbrainmm</groupId>
     <artifactId>avito-prices-api</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.1</version>
     <name>avito-prices-api</name>
     <description>avito-prices-api</description>
     <properties>
