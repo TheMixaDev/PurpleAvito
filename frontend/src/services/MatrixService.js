@@ -28,11 +28,17 @@ export const MatrixService = {
             success(response.data);
         }, fail);
     },
-    createMatrix: (parent, content, success, fail) => {
+    createMatrixLegacy: (parent, content, success, fail) => {
         if(!parent) parent = "discount_matrix_new";
         NetworkService.ClassicRequest("POST", `matrices/${parent}`,
             content, response => {
             success(response.data);
         }, fail, "text/plain");
+    },
+    createMatrix: (parent, file, success, fail, uploadProgress) => {
+        if(!parent) parent = "discount_matrix_new";
+        NetworkService.ClassicFileRequest(`matrices/${parent}`, file, response => {
+            success(response.data);
+        }, fail, uploadProgress);
     }
 }

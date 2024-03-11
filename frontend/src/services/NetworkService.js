@@ -24,6 +24,21 @@ export const NetworkService = {
                 success(response);
         })();
     },
+    ClassicFileRequest(url, file, success, fail, uploadProgress) {
+        const formData = new FormData();
+        formData.append('file', file);
+        (async () => {
+            let response = await axios({
+                method: "POST",
+                url: `${configuration.serverUrl}${url}`,
+                data: formData,
+                headers: {'Content-Type': 'multipart/form-data'},
+                onUploadProgress: uploadProgress
+            }).catch(fail);
+            if(response)
+                success(response);
+        })();
+    },
     /**
      * Executes an authenticated HTTP request using Axios.
      *

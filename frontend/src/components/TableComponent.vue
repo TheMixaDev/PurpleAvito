@@ -18,7 +18,7 @@ const PAGE = "flex items-center justify-center text-sm py-2 px-3 leading-tight t
 <template>
     <div class="mx-auto max-w-screen-xl p-3 px-4 lg:px-12 animate-fade animate-once animate-duration-500 animate-ease-out">
         <div class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg vld-parent">
-            <div class="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4" v-if="searchEnabled || creationEnabled">
+            <div class="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4" v-if="searchEnabled || creationEnabled || clearEnabled">
                 <div class="w-full md:w-1/2">
                     <UISearchField v-if="searchEnabled" v-model="searchValue" @apply="checkSearch"/>
                 </div>
@@ -53,7 +53,7 @@ const PAGE = "flex items-center justify-center text-sm py-2 px-3 leading-tight t
                         </UITableRow>
                     </tbody>
                 </table>
-                <UITableEmpty v-if="pagination.total == 0 && !isLoading" class="pb-6"/>
+                <UITableEmpty v-if="pagination.total == 0 && !isLoading" class="pb-6" :text="emptyText"/>
             </div>
             <nav v-if="footerEnabled && !isLoading && pagination.total > 0" class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4" >
                 <span class="text-sm font-normal text-gray-500 dark:text-gray-400">
@@ -127,6 +127,10 @@ export default {
         loadCount: {
             type: Number,
             default: 0
+        },
+        emptyText: {
+            type: String,
+            default: "Данные не найдены"
         },
         search: String,
         empty: Boolean,

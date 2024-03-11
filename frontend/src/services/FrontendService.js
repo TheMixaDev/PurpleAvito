@@ -31,13 +31,14 @@ export const FrontendService = {
             component.$notify({type: 'error', text: 'Произошла ошибка при загрузке данных'});
         });
     },
-    showWarningModal(text, proceed) {
+    showWarningModal(text, proceed = () => {}, cancel = () => {}) {
         const modal = useModal({
             component: WarningModal,
             attrs: {
                 text,
                 onClose() {
                     modal.close();
+                    cancel();
                 },
                 onProceed() {
                     modal.close();
@@ -67,5 +68,16 @@ export const FrontendService = {
         if(value) value = parseInt(value);
         if(!value) value = null;
         return value;
+    },
+    formatFileSize(fileSizeInBytes) {
+        if (fileSizeInBytes < 1024) {
+            return fileSizeInBytes + ' байта';
+        } else if (fileSizeInBytes < 1024 * 1024) {
+            return (fileSizeInBytes / 1024).toFixed(1) + ' Кб';
+        } else if (fileSizeInBytes < 1024 * 1024 * 1024) {
+            return (fileSizeInBytes / (1024 * 1024)).toFixed(1) + ' Мб';
+        } else {
+            return (fileSizeInBytes / (1024 * 1024 * 1024)).toFixed(1) + ' Гб';
+        }
     }
 }

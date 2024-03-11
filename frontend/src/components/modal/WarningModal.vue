@@ -21,7 +21,7 @@ import { VueFinalModal } from 'vue-final-modal'
                 <font-awesome-icon :icon="['fas', 'triangle-exclamation']" class="text-yellow-500 text-5xl m-3"/>
                 <p class="mb-4 text-gray-500 dark:text-gray-300">{{ text }}</p>
                 <div class="flex justify-center items-center space-x-4">
-                    <UIButton color="gray" classExtension="text-black dark:text-white" @click="$emit('close')">
+                    <UIButton color="gray" classExtension="dark:text-white text-black" @click="$emit('close')">
                         Отмена
                     </UIButton>
                     <UIButton color="secondary" @click="$emit('proceed')">
