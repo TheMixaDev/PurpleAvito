@@ -3,6 +3,7 @@ package org.bigbrainmm.avitopricesapi.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.bigbrainmm.avitopricesapi.AvitoPricesApiApplication;
 import org.bigbrainmm.avitopricesapi.StaticStorage;
 import org.bigbrainmm.avitopricesapi.dto.*;
 import org.bigbrainmm.avitopricesapi.entity.DiscountBaseline;
@@ -15,7 +16,10 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -30,6 +34,7 @@ public class MatrixController {
     private final DiscountBaselineRepository discountBaselineRepository;
     private final SourceBaselineRepository sourceBaselineRepository;
     private final JdbcTemplate jdbcTemplate;
+    private final int MAX_SQL_PACKET_SIZE = 100000;
 
     @GetMapping(produces = "application/json")
     @Operation(summary = "Посмотреть список всех матриц")
@@ -40,11 +45,15 @@ public class MatrixController {
         return allMatrixRequest;
     }
 
-    @PostMapping(value = "/{matrix_name}", produces = "application/json", consumes = MediaType.TEXT_PLAIN_VALUE)
-    @Operation(summary = "Установить изменения в матрице из CSV файла. discount_matrix_new - создает новую чистую матрицу. data - если пуст, то изменений не будет.")
-    public ResponseEntity<String> setChangesInMatrix(@PathVariable("matrix_name") String name, @RequestBody(required = false) String data) {
+    @PostMapping(value = "/{matrix_name}", produces = "application/json", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Установить изменения в матрице из CSV файла. discount_matrix_new - создает новую чистую матрицу. data - если пуст, то отправит ошибку.")
+    public ResponseEntity<String> setChangesInMatrix(
+            @PathVariable("matrix_name") String name,
+            @RequestParam(value = "file", required = false) MultipartFile file
+    ) {
+        if(file == null || file.isEmpty())
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{ \"message\": \"Не прикреплен файл изменений матрицы\" }");
         String newName;
-        if (data == null) data = "";
         if (name.contains("baseline_matrix")) {
             if (sourceBaselineRepository.findByName(name) == null)
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{ \"message\": \"Матрицы с таким именем не существует\" }");
@@ -70,30 +79,44 @@ public class MatrixController {
                 discountBaselineRepository.save(new DiscountBaseline(newName));
             }
             // Заполнение данными
-            StringBuilder query = new StringBuilder("insert into " + newName + " (microcategory_id, location_id, price) values ");
-            if (!data.isEmpty()) {
-                String[] lines = data.split("\n");
-                String nullLiteral = "null";
-                for (String row : lines) {
-                    counter++;
-                    var slt = row.split(",");
-                    if (slt.length < 3) {
-                        notCompletedRows.add(counter);
-                        continue;
-                    }
-                    if (
-                            !((isNumeric(slt[0]) || slt[0].equals(nullLiteral)) &&
-                            (isNumeric(slt[1]) || slt[1].equals(nullLiteral)) &&
-                            (isNumeric(slt[2]) || slt[2].equals(nullLiteral)))
-                    ) {
-                        notCompletedRows.add(counter);
-                        continue;
-                    }
-                    query.append("(").append(slt[0]).append(", ").append(slt[1]).append(", ").append(slt[2]).append(")");
-                    if (counter < lines.length) query.append(", ");
+            String insertion = "insert into " + newName + " (microcategory_id, location_id, price) values ";
+            StringBuilder query = new StringBuilder(insertion);
+            String nullLiteral = "null";
+            BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()));
+            String row;
+            int line = 0;
+            while ((row = reader.readLine()) != null) {
+                counter++;
+                var slt = row.split(",");
+                if (slt.length < 3) {
+                    notCompletedRows.add(counter);
+                    continue;
                 }
+                if (
+                        !((isNumeric(slt[0]) || slt[0].equals(nullLiteral)) &&
+                        (isNumeric(slt[1]) || slt[1].equals(nullLiteral)) &&
+                        (isNumeric(slt[2]) || slt[2].equals(nullLiteral)))
+                ) {
+                    notCompletedRows.add(counter);
+                    continue;
+                }
+                query.append("(").append(slt[0]).append(", ").append(slt[1]).append(", ").append(slt[2]).append(")");
+                query.append(", ");
+                line++;
+                if (line == MAX_SQL_PACKET_SIZE) {
+                    query.deleteCharAt(query.length() - 2);
+                    query.append("ON CONFLICT (microcategory_id, location_id) DO UPDATE SET price = EXCLUDED.price;");
+                    jdbcTemplate.update(query.toString());
+                    System.out.println("Sent " + line + " rows to " + newName);
+                    query = new StringBuilder(insertion);
+                    line = 0;
+                }
+            }
+            if(line > 0) {
+                query.deleteCharAt(query.length() - 2);
                 query.append("ON CONFLICT (microcategory_id, location_id) DO UPDATE SET price = EXCLUDED.price;");
                 jdbcTemplate.update(query.toString());
+                System.out.println("Sent " + line + " rows to " + newName);
             }
         } catch (Exception e) {
             e.printStackTrace();
