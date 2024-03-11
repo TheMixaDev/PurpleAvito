@@ -112,6 +112,8 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-primary:5432/avito_db
       - SPRING_DATASOURCE_USERNAME=hulumulu
       - SPRING_DATASOURCE_PASSWORD=Qwerty123
+      - SELF_URL=http://avito-prices-api-primary:8081
+      - AVITO_PRICES_SERVICES_URLS=http://avito-prices-api-primary:8081,http://avito-prices-api-replica-1:8082,http://avito-prices-api-replica-2:8083
 
   avito-prices-api-replica-1:
     container_name: avito-prices-api-replica-1
@@ -129,6 +131,8 @@ services:
       - MAX_DATABASE_PING_IN_MILLIS=50
       - SPRING_DATASOURCE_USERNAME=hulumulu
       - SPRING_DATASOURCE_PASSWORD=Qwerty123
+      - SELF_URL=http://avito-prices-api-primary:8081
+      - AVITO_PRICES_SERVICES_URLS=http://avito-prices-api-primary:8081,http://avito-prices-api-replica-1:8082,http://avito-prices-api-replica-2:8083
 
   avito-prices-api-replica-2:
     container_name: avito-prices-api-replica-2
@@ -146,6 +150,8 @@ services:
       - MAX_DATABASE_PING_IN_MILLIS=50
       - SPRING_DATASOURCE_USERNAME=hulumulu
       - SPRING_DATASOURCE_PASSWORD=Qwerty123
+      - SELF_URL=http://avito-prices-api-primary:8081
+      - AVITO_PRICES_SERVICES_URLS=http://avito-prices-api-primary:8081,http://avito-prices-api-replica-1:8082,http://avito-prices-api-replica-2:8083
   
   nginx:
     container_name: nginx
