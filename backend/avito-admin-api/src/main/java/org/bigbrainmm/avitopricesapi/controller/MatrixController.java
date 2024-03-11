@@ -3,13 +3,13 @@ package org.bigbrainmm.avitopricesapi.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.bigbrainmm.avitopricesapi.StaticStorage;
 import org.bigbrainmm.avitopricesapi.dto.*;
 import org.bigbrainmm.avitopricesapi.entity.DiscountBaseline;
 import org.bigbrainmm.avitopricesapi.dto.DiscountSegment;
 import org.bigbrainmm.avitopricesapi.entity.SourceBaseline;
 import org.bigbrainmm.avitopricesapi.repository.DiscountBaselineRepository;
 import org.bigbrainmm.avitopricesapi.repository.SourceBaselineRepository;
-import org.bigbrainmm.avitopricesapi.service.SaveBaselineAndSegmentsService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -31,9 +31,7 @@ public class MatrixController {
 
     private final DiscountBaselineRepository discountBaselineRepository;
     private final SourceBaselineRepository sourceBaselineRepository;
-    private final PlatformTransactionManager transactionManager;
     private final JdbcTemplate jdbcTemplate;
-    private final SaveBaselineAndSegmentsService saveBaselineAndSegmentsService;
 
     @GetMapping(produces = "application/json")
     @Operation(summary = "Посмотреть список всех матриц")
@@ -154,7 +152,7 @@ public class MatrixController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("{ \"message\": \"Матрица с таким именем не найдена\" }");
         }
         baselineMatrixAndSegments.setBaselineMatrix(new Matrix(sourceBaseline.getName()));
-        saveBaselineAndSegmentsService.saveDataToStorage(baselineMatrixAndSegments);
+        StaticStorage.saveBaselineAndSegments(baselineMatrixAndSegments);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -179,26 +177,20 @@ public class MatrixController {
                 }
             }
         }
-        try {
-            TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
-            transactionTemplate.executeWithoutResult(status -> {
-                for (var pair : request.getDiscountSegments()) {
-                    DiscountSegment ds = baselineMatrixAndSegments.getDiscountSegments().stream().filter(ds1 -> Objects.equals(ds1.getId(), pair.getSegmentId())).findAny().get();
-                    if (pair.getDiscountMatrixName() == null) ds.setName(null);
-                    else if (pair.getDiscountMatrixName().equals("null")) ds.setName(null);
-                    else ds.setName(pair.getDiscountMatrixName());
-                }
-                for (var pair : request.getDiscountSegments()) {
-                    if (pair.getDiscountMatrixName() == null) continue;
-                    if (pair.getDiscountMatrixName().equals("null")) continue;
-                    if (baselineMatrixAndSegments.getDiscountSegments().stream().filter(ds -> Objects.equals(ds.getName(), pair.getDiscountMatrixName())).count() > 1) {
-                        throw new RuntimeException();
-                    }
-                }
-            });
-            saveBaselineAndSegmentsService.saveDataToStorage(baselineMatrixAndSegments);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{ \"message\": \"Нарушена уникальность имён скидочных матриц. 1 - сегмент, одна скидочная матрица или null\" }");
+        List<DiscountSegment> copy = new ArrayList<>(baselineMatrixAndSegments.getDiscountSegments());
+        for (var pair : request.getDiscountSegments()) {
+            DiscountSegment ds = baselineMatrixAndSegments.getDiscountSegments().stream().filter(ds1 -> Objects.equals(ds1.getId(), pair.getSegmentId())).findAny().get();
+            if (pair.getDiscountMatrixName() == null) ds.setName(null);
+            else if (pair.getDiscountMatrixName().equals("null")) ds.setName(null);
+            else ds.setName(pair.getDiscountMatrixName());
+        }
+        for (var pair : request.getDiscountSegments()) {
+            if (pair.getDiscountMatrixName() == null) continue;
+            if (pair.getDiscountMatrixName().equals("null")) continue;
+            if (baselineMatrixAndSegments.getDiscountSegments().stream().filter(ds -> Objects.equals(ds.getName(), pair.getDiscountMatrixName())).count() > 1) {
+                baselineMatrixAndSegments.setDiscountSegments(copy);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{ \"message\": \"Нарушена уникальность имён скидочных матриц. 1 - сегмент, одна скидочная матрица или null\" }");
+            }
         }
         return new ResponseEntity<>(HttpStatus.OK);
     }

@@ -13,7 +13,7 @@ import lombok.Setter;
 @Setter
 @Schema(description = "Установить новую текущую матрицу по имени")
 public class SetupMatrixRequest {
-    @Schema(description = "Имя матрицы", example = "Скидочная матрица 1")
+    @Schema(description = "Имя матрицы", example = "baseline_matrix_1")
     @NotBlank(message = "Имя матрицы не может быть пустым")
     private String name;
 }

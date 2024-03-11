@@ -6,7 +6,9 @@ import org.bigbrainmm.avitopricesapi.dto.TreeNode;
 import org.bigbrainmm.avitopricesapi.dto.UserSegments;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
@@ -32,6 +34,17 @@ public class StaticStorage {
             InputStreamReader isr = new InputStreamReader(new FileSystemResource("baseline_and_segments.json").getInputStream());
             ObjectMapper mapper = new ObjectMapper();
             StaticStorage.baselineMatrixAndSegments = mapper.readValue(isr, BaselineMatrixAndSegments.class);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void saveBaselineAndSegments(BaselineMatrixAndSegments baselineMatrixAndSegments) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            Resource resource = new FileSystemResource("baseline_and_segments.json");
+            File file = new File(String.valueOf(resource.getFile()));
+            mapper.writeValue(file, baselineMatrixAndSegments);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
