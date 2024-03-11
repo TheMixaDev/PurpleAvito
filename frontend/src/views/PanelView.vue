@@ -96,7 +96,7 @@ import UIProgressBar from '@/components/ui/UIProgressBar.vue';
                     <font-awesome-icon :icon="['fas', 'plus']"/>
                     {{ (parentMatrix != 0 ? `Клонировать` : `Создать`) }} матрицу ({{ (parentMatrix != 0 && SettingsStore.matrices[parentMatrix].startsWith("baseline") ? `Основная` : `Скидочная`) }})
                 </UIButton>
-                <p class="text-center mt-2">
+                <p class="text-center mt-2 text-xl">
                     {{ (parentMatrix != 0 ? `Измененных` : `Всего`) }}
                     <span v-if="originFile == null">
                         строк матрицы - {{ NewMatrixStore.items.length }}
