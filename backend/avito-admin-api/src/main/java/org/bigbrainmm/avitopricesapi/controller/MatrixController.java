@@ -83,6 +83,7 @@ public class MatrixController {
             StringBuilder query = new StringBuilder("insert into " + newName + " (microcategory_id, location_id, price) values ");
             if (!data.isEmpty()) {
                 String[] lines = data.split("\n");
+                String nullLiteral = "null";
                 for (String row : lines) {
                     counter++;
                     var slt = row.split(",");
@@ -90,7 +91,11 @@ public class MatrixController {
                         notCompletedRows.add(counter);
                         continue;
                     }
-                    if (!isNumeric(slt[0]) || !isNumeric(slt[1]) || !isNumeric(slt[2])) {
+                    if (
+                            !((isNumeric(slt[0]) || slt[0].equals(nullLiteral)) &&
+                            (isNumeric(slt[1]) || slt[1].equals(nullLiteral)) &&
+                            (isNumeric(slt[2]) || slt[2].equals(nullLiteral)))
+                    ) {
                         notCompletedRows.add(counter);
                         continue;
                     }
