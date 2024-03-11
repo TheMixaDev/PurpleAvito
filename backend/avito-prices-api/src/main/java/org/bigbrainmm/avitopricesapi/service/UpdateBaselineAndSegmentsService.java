@@ -63,6 +63,7 @@ public class UpdateBaselineAndSegmentsService {
 
     public void updateBaselineAndSegmentsFromServer() {
         baselineMatrixAndSegments = restTemplate.getForEntity(url, BaselineMatrixAndSegments.class).getBody();
+        lastUpdate = System.currentTimeMillis();
         StaticStorage.saveBaselineAndSegments(baselineMatrixAndSegments);
     }
 
