@@ -31,7 +31,7 @@ services:
       retries: 5
     container_name: postgres_replica_1
     ports:
-      - "5433:5433"
+      - "5433:5432"
     environment:
       PGUSER: replicator
       PGPASSWORD: Qwerty123
@@ -45,7 +45,7 @@ services:
       done
       echo 'Backup done, starting replica...'
       chmod 0700 /var/lib/postgresql/data
-      postgres -p 5433
+      postgres
       "
     depends_on:
       - avito_admin_api
@@ -72,7 +72,9 @@ services:
       - "8081:8081"
     depends_on:
       - avito_admin_api
+      
     environment:
+      - JAVA_TOOL_OPTIONS=-Dserver.port=8081
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres_primary:5432/avito_db
       - SPRING_DATASOURCE_USERNAME=hulumulu
       - SPRING_DATASOURCE_PASSWORD=Qwerty123
@@ -86,6 +88,7 @@ services:
     depends_on:
       - avito_prices_api_primary
     environment:
+      - JAVA_TOOL_OPTIONS=-Dserver.port=8082
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres_primary:5432/avito_db
       - SPRING_DATASOURCE_USERNAME=hulumulu
       - SPRING_DATASOURCE_PASSWORD=Qwerty123
