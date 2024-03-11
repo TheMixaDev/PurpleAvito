@@ -87,10 +87,10 @@ public class PriceController {
             // если она не нулл
                 // return findPrice(initial_MID, initial_MID, parent_location_id)
 
-        String sql = "select * from " + tableName + " where microcategory_id = " + microCategory.getId() + " and location_id = " + location.getId() + ";";
+        String sql = "select * from " + tableName + " where microcategory_id = " + microCategory.getId() + " and location_id = " + location.getId() + " and price is not null;";
         List<PriceResponse> res = jdbcTemplate.query(sql, (rs, rowNum) ->
                 new PriceResponse(rs.getLong("price"), rs.getLong("location_id"), rs.getLong("microcategory_id"), tableName, null));
-        if (!res.isEmpty()) return res.get(0);
+        if (!res.isEmpty() && res.get(0).getPrice() != 0) return res.get(0);
 
         TreeNode parentNodeMic = microCategory.getParent();
         if (parentNodeMic != null) {
