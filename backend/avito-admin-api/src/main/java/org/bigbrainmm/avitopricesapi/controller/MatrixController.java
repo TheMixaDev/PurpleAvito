@@ -152,6 +152,7 @@ public class MatrixController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("{ \"message\": \"Матрица с таким именем не найдена\" }");
         }
         baselineMatrixAndSegments.setBaselineMatrix(new Matrix(sourceBaseline.getName()));
+        // Сохранение изменений
         StaticStorage.saveBaselineAndSegments(baselineMatrixAndSegments);
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -173,25 +174,29 @@ public class MatrixController {
                 if (!pair.getDiscountMatrixName().equals("null")) {
                     if (discountBaseline == null) return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                             .body("{ \"message\": \"Матрица с именем " + pair.getDiscountMatrixName() + " не найдена\" }");
-                    discountSegment.get().setName(discountBaseline.getName());
                 }
             }
         }
-        List<DiscountSegment> copy = new ArrayList<>(baselineMatrixAndSegments.getDiscountSegments());
+
+        List<DiscountSegment> copy = new ArrayList<>();
+        for (var ds : baselineMatrixAndSegments.getDiscountSegments()) copy.add(new DiscountSegment(ds.getId(), ds.getName()));
+
         for (var pair : request.getDiscountSegments()) {
-            DiscountSegment ds = baselineMatrixAndSegments.getDiscountSegments().stream().filter(ds1 -> Objects.equals(ds1.getId(), pair.getSegmentId())).findAny().get();
+            DiscountSegment ds = copy.stream().filter(ds1 -> Objects.equals(ds1.getId(), pair.getSegmentId())).findAny().get();
             if (pair.getDiscountMatrixName() == null) ds.setName(null);
             else if (pair.getDiscountMatrixName().equals("null")) ds.setName(null);
             else ds.setName(pair.getDiscountMatrixName());
         }
+        // Проверка уникальности
         for (var pair : request.getDiscountSegments()) {
-            if (pair.getDiscountMatrixName() == null) continue;
-            if (pair.getDiscountMatrixName().equals("null")) continue;
-            if (baselineMatrixAndSegments.getDiscountSegments().stream().filter(ds -> Objects.equals(ds.getName(), pair.getDiscountMatrixName())).count() > 1) {
-                baselineMatrixAndSegments.setDiscountSegments(copy);
+            if (pair.getDiscountMatrixName() == null || pair.getDiscountMatrixName().equals("null")) continue;
+            if (copy.stream().filter(ds1 -> Objects.equals(ds1.getName(), pair.getDiscountMatrixName())).count() > 1) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{ \"message\": \"Нарушена уникальность имён скидочных матриц. 1 - сегмент, одна скидочная матрица или null\" }");
             }
         }
+        // Сохранение изменений
+        baselineMatrixAndSegments.setDiscountSegments(copy);
+        StaticStorage.saveBaselineAndSegments(baselineMatrixAndSegments);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }
