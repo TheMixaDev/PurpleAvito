@@ -1,6 +1,7 @@
 package org.bigbrainmm.avitopricesapi.service;
 
 import jakarta.annotation.PostConstruct;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.bigbrainmm.avitopricesapi.dto.BaselineMatrixAndSegments;
 import org.slf4j.Logger;
@@ -23,6 +24,7 @@ public class SOCDelegatorService {
     @Value("${AVITO_PRICES_SERVICES_URLS}")
     private String servicesUrl;
     private final Logger logger = LoggerFactory.getLogger(SOCDelegatorService.class);
+    @Getter
     private List<String> socUrls;
 
     @PostConstruct
