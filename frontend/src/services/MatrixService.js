@@ -14,13 +14,13 @@ export const MatrixService = {
         }, fail);
     },
     setBaseline: (name, success, fail) => {
-        NetworkService.ClassicRequest("POST", `matrices/setup`,
+        NetworkService.ClassicRequest("POST", `matrices/setup/baseline`,
             { name }, response => {
             success(response.data);
         }, fail);
     },
-    setSegment: (segmentId, discountMatrixName, success, fail) => {
-        MatrixService.setSegments([{ segmentId, discountMatrixName }], success, fail);
+    setSegment: (id, name, success, fail) => {
+        MatrixService.setSegments([{ id, name }], success, fail);
     },
     setSegments: (segments, success, fail) => {
         NetworkService.ClassicRequest("POST", `matrices/setup/segments`,

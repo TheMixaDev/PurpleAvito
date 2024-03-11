@@ -322,7 +322,9 @@ export default {
                         this.$notify({type: 'error', text: 'Произошла ошибка при обновлении данных'});
                         this.matrixPublishing = false;
                     });
-                }, () => {
+                }, error => {
+                    if(error.response.data && error.response.data.showModal)
+                        FrontendService.showWarningModal(error.response.data.message);
                     this.$notify({type: 'error', text: 'Произошла ошибка при создании матрицы'});
                     this.matrixPublishing = false;
                 }, event => this.percentLoading = Math.round((event.loaded * 1000) / event.total) / 10)

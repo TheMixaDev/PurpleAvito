@@ -90,7 +90,7 @@ export default {
         setAllSegments() {
             let updating = SettingsStore.segments.segments
                 .filter(item => item.changed)
-                .map(item => ({ segmentId: item.id, discountMatrixName: item.name }));
+                .map(item => ({ id: item.id, name: item.name }));
             if (updating.length > 0) {
                 MatrixService.setSegments(updating, () => {
                     this.forceUpdate();

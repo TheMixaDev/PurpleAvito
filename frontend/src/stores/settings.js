@@ -46,7 +46,11 @@ export const useSettingsStore = defineStore('settings', () => {
         if (Date.now() - lastUpdate.value > configuration.settingsUpdate) {
             loading.value = true;
             lastUpdate.value = Date.now();
-            return getMatrices(() => getSetup(success, fail), fail);
+            return getMatrices(() => getSetup(success, fail), () => 
+                setTimeout(() => {
+                    updateSettings(success, fail);
+                }, 1000)
+            );
         }
         success();
     }
