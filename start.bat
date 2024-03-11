@@ -1,4 +1,4 @@
 docker-compose rm -f
-docker rmi avito-admin-api-app
-docker rmi avito-prices-api-app
+docker rmi purpleavitoback-avito_admin_api
+docker rmi purpleavitoback-avito_prices_api
 docker-compose up
