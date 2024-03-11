@@ -20,7 +20,7 @@ public class AvitoPricesApiApplication {
 
     @Bean
     public DataSourceInitializer dataSourceInitializer(DataSource dataSource, JdbcTemplate jdbcTemplate) {
-        int count = jdbcTemplate.queryForObject("select COUNT(*) from current_baseline_matrix", Integer.class);
+        int count = jdbcTemplate.queryForObject("select COUNT(*) from source_baseline", Integer.class);
         if (count > 0) return null;
         ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
         count = jdbcTemplate.queryForObject("select count(*) from pg_user where usename='replicator';", Integer.class);

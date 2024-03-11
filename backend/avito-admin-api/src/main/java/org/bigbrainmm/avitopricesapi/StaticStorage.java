@@ -12,8 +12,8 @@ import java.io.InputStreamReader;
 public class StaticStorage {
     public static TreeNode microCategoryRoot;
     public static TreeNode locationsRoot;
-    public static BaselineMatrixAndSegments baselineMatrixAndSegments;
     public static UserSegments userSegments;
+    public static BaselineMatrixAndSegments baselineMatrixAndSegments;
 
     static {
         microCategoryRoot = TreeNode.buildTreeFromFile("microcategories.txt");
@@ -28,14 +28,11 @@ public class StaticStorage {
         }
 
         try {
-            InputStreamReader isr = new InputStreamReader(new ClassPathResource("json/current_baseline_and_segments.json").getInputStream());
+            InputStreamReader isr = new InputStreamReader(new ClassPathResource("json/baseline_and_segments.json").getInputStream());
             ObjectMapper mapper = new ObjectMapper();
             StaticStorage.baselineMatrixAndSegments = mapper.readValue(isr, BaselineMatrixAndSegments.class);
-            // ТУДУ: ОБРАЩЕНИЕ К СЕРВЕРУ ЗА ОБНОВЛЕНИЕМ ДАННЫХ
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
-
     }
 }

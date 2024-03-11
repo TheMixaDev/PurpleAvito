@@ -1,12 +1,16 @@
 package org.bigbrainmm.avitopricesapi.dto;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import org.bigbrainmm.avitopricesapi.entity.DiscountSegment;
+import lombok.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.List;
 
 @AllArgsConstructor
@@ -14,9 +18,11 @@ import java.util.List;
 @Getter
 @Setter
 @Schema(description = "Текущая стандартная матрица и список скидочных сегментов")
-public class SetupMatrixResponse {
+public class BaselineMatrixAndSegments {
     @Schema(description = "Стандартная матрица")
     Matrix baselineMatrix;
     @Schema(description = "Скидочные сегменты")
     List<DiscountSegment> discountSegments;
 }
+
+
