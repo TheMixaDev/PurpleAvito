@@ -5,11 +5,18 @@ import org.bigbrainmm.avitopricesapi.dto.BaselineMatrixAndSegments;
 import org.bigbrainmm.avitopricesapi.dto.TreeNode;
 import org.bigbrainmm.avitopricesapi.dto.UserSegments;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class StaticStorage {
+    public static String adminServerUrl = "http://localhost:8080/";
+    public static AtomicBoolean isAvailable = new AtomicBoolean(false);
+    public static Long lastUpdate = 0L;
     public static TreeNode microCategoryRoot;
     public static TreeNode locationsRoot;
     public static BaselineMatrixAndSegments baselineMatrixAndSegments;
@@ -28,14 +35,22 @@ public class StaticStorage {
         }
 
         try {
-            InputStreamReader isr = new InputStreamReader(new ClassPathResource("json/current_baseline_and_segments.json").getInputStream());
+            InputStreamReader isr = new InputStreamReader(new FileSystemResource("baseline_and_segments.json").getInputStream());
             ObjectMapper mapper = new ObjectMapper();
             StaticStorage.baselineMatrixAndSegments = mapper.readValue(isr, BaselineMatrixAndSegments.class);
-            // ТУДУ: ОБРАЩЕНИЕ К СЕРВЕРУ ЗА ОБНОВЛЕНИЕМ ДАННЫХ
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
 
-
+    public static void saveBaselineAndSegments(BaselineMatrixAndSegments baselineMatrixAndSegments) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            Resource resource = new FileSystemResource("baseline_and_segments.json");
+            File file = new File(String.valueOf(resource.getFile()));
+            mapper.writeValue(file, baselineMatrixAndSegments);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

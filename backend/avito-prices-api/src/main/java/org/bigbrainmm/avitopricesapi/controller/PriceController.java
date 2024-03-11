@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.bigbrainmm.avitopricesapi.dto.*;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,7 +24,7 @@ public class PriceController {
 
     @Schema(description = "Запрос цены")
     @PostMapping(value = "/")
-    public PriceResponse getPrice(@RequestBody PriceRequest priceRequest) {
+    public ResponseEntity<PriceResponse> getPrice(@RequestBody PriceRequest priceRequest) {
         // Описание алгоритма
 
         // заводим переменную price
@@ -36,6 +37,10 @@ public class PriceController {
         // if price != -1:
             // price = findPrice(base)
         // заполняем ответ
+
+        if (!isAvailable.get()) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
+        }
 
         TreeNode microCategory = microCategoryRoot.getById(priceRequest.getMicroCategoryId());
         if (microCategory == null) {
@@ -73,10 +78,12 @@ public class PriceController {
                     baselineMatrixAndSegments.getBaselineMatrix().getName()
             );
         }
-        return price;
+        return ResponseEntity.status(HttpStatus.OK).body(price);
     }
 
     private PriceResponse findPrice(TreeNode initialMicrocategory, TreeNode microCategory, TreeNode location, String tableName) {
+        // Описание алгоритма
+
         // select * from tableName where location_id, mic_id
         // if price != NULL reutrn price, mic, location
         // else
@@ -110,8 +117,8 @@ public class PriceController {
 
     @ExceptionHandler(InvalidDataException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse error(InvalidDataException ex) {
-        return new ErrorResponse(ex.getMessage());
+    public MessageResponse error(InvalidDataException ex) {
+        return new MessageResponse(ex.getMessage());
     }
 
 
