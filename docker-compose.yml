@@ -93,3 +93,12 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres_replica_1:5433/avito_db
       - SPRING_DATASOURCE_USERNAME=hulumulu
       - SPRING_DATASOURCE_PASSWORD=Qwerty123
+  
+  nginx:
+    container_name: nginx
+    build: ./frontend
+    restart: always
+    ports:
+      - '80:80'
+    depends_on:
+      - avito_admin_api
