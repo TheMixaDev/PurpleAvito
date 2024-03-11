@@ -5,8 +5,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.bigbrainmm.avitopricesapi.dto.*;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.ProblemDetail;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,10 +37,12 @@ public class PriceController {
             // price = findPrice(base)
         // заполняем ответ
 
-        if (microCategoryRoot.getById(priceRequest.getMicroCategoryId()) == null) {
+        TreeNode microCategory = microCategoryRoot.getById(priceRequest.getMicroCategoryId());
+        if (microCategory == null) {
             throw new InvalidDataException("Категория с id " + priceRequest.getMicroCategoryId() + " не найдена");
         }
-        if (locationsRoot.getById(priceRequest.getLocationId()) == null) {
+        TreeNode location = locationsRoot.getById(priceRequest.getLocationId());
+        if (location == null) {
             throw new InvalidDataException("Локация с id " + priceRequest.getLocationId() + " не найдена");
         }
 
@@ -54,9 +54,9 @@ public class PriceController {
                     String matrixName = getMatrixNameBySegment(segment);
                     if (matrixName == null) continue;
                     price = findPrice(
-                            priceRequest.getMicroCategoryId(),
-                            priceRequest.getMicroCategoryId(),
-                            priceRequest.getLocationId(),
+                            microCategory,
+                            microCategory,
+                            location,
                             matrixName);
                     if (price != null) {
                         price.setUserSegmentId(segment);
@@ -67,16 +67,16 @@ public class PriceController {
         }
         if (price == null) {
             price = findPrice(
-                    priceRequest.getMicroCategoryId(),
-                    priceRequest.getMicroCategoryId(),
-                    priceRequest.getLocationId(),
+                    microCategory,
+                    microCategory,
+                    location,
                     baselineMatrixAndSegments.getBaselineMatrix().getName()
             );
         }
         return price;
     }
 
-    private PriceResponse findPrice(long initialMicroCategoryId, long microCategoryId, long locationId, String tableName) {
+    private PriceResponse findPrice(TreeNode initialMicrocategory, TreeNode microCategory, TreeNode location, String tableName) {
         // select * from tableName where location_id, mic_id
         // if price != NULL reutrn price, mic, location
         // else
@@ -86,18 +86,19 @@ public class PriceController {
             // берём верхнюю ноду локации
             // если она не нулл
                 // return findPrice(initial_MID, initial_MID, parent_location_id)
-        String sql = "select * from " + tableName + " where microcategory_id = " + microCategoryId + " and location_id = " + locationId + ";";
+
+        String sql = "select * from " + tableName + " where microcategory_id = " + microCategory.getId() + " and location_id = " + location.getId() + ";";
         List<PriceResponse> res = jdbcTemplate.query(sql, (rs, rowNum) ->
                 new PriceResponse(rs.getLong("price"), rs.getLong("location_id"), rs.getLong("microcategory_id"), tableName, null));
         if (!res.isEmpty()) return res.get(0);
 
-        TreeNode parentNodeMic = microCategoryRoot.getById(microCategoryId).getParent();
+        TreeNode parentNodeMic = microCategory.getParent();
         if (parentNodeMic != null) {
-            return findPrice(initialMicroCategoryId, parentNodeMic.getId(), locationId, tableName);
+            return findPrice(initialMicrocategory, parentNodeMic, location, tableName);
         }
-        TreeNode parentNodeLoc = locationsRoot.getById(locationId).getParent();
+        TreeNode parentNodeLoc = location.getParent();
         if (parentNodeLoc != null) {
-            return findPrice(initialMicroCategoryId, initialMicroCategoryId, parentNodeLoc.getId(), tableName);
+            return findPrice(initialMicrocategory, initialMicrocategory, parentNodeLoc, tableName);
         }
         return null;
     }
