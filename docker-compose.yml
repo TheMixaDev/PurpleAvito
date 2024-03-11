@@ -49,7 +49,7 @@ services:
       - avito_admin_api
   avito_admin_api:
     container_name: avito_admin_api
-    build: ./avito-admin-api
+    build: ./backend/avito-admin-api
     restart: always
     ports:
       - "8080:8080"
@@ -61,7 +61,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=Qwerty123
   avito_prices_api:
     container_name: avito_prices_api
-    build: ./avito-prices-api
+    build: ./backend/avito-prices-api
     restart: always
     ports:
       - "8081:8081"
