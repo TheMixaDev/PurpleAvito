@@ -4,17 +4,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.bigbrainmm.avitopricesapi.dto.BaselineMatrixAndSegments;
 import org.bigbrainmm.avitopricesapi.dto.TreeNode;
 import org.bigbrainmm.avitopricesapi.dto.UserSegments;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+@Service
 public class StaticStorage {
-    public static String adminServerUrl = "http://localhost:8080/";
     public static AtomicBoolean isAvailable = new AtomicBoolean(false);
     public static Long lastUpdate = 0L;
     public static TreeNode microCategoryRoot;

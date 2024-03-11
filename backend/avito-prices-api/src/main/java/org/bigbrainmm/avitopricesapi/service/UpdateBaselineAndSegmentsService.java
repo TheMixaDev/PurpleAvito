@@ -11,6 +11,7 @@ import org.bigbrainmm.avitopricesapi.repository.SourceBaselineRepository;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -22,21 +23,23 @@ import static org.bigbrainmm.avitopricesapi.StaticStorage.*;
 @Service
 @RequiredArgsConstructor
 public class UpdateBaselineAndSegmentsService {
+    @Value("${AVITO_ADMIN_API_URL}")
+    private String adminServerUrl;
 
     private final RestTemplate restTemplate;
     private final DiscountBaselineRepository discountBaselineRepository;
     private final SourceBaselineRepository sourceBaselineRepository;
     private final Logger logger = LoggerFactory.getLogger(UpdateBaselineAndSegmentsService.class);
-    private final String url = adminServerUrl + "/api/matrices/setup";
+    private String url;
 
     @PostConstruct
     public void loadBaselineAndSegments() {
+        url = adminServerUrl + "/api/matrices/setup";
         isAvailable.set(false);
         logger.info("Поменян статус сервера: " + isAvailable.get());
         logger.info("Обновление baseline и discount segments");
         boolean success = updateBaselineAndSegmentsFromServer();
         if (success && isDataUpdated(baselineMatrixAndSegments)) {
-            logger.info("baselineMatrixAndSegments обновлён");
             isAvailable.set(true);
             logger.info("Поменян статус сервера: " + isAvailable.get());
         } else {
@@ -48,12 +51,12 @@ public class UpdateBaselineAndSegmentsService {
 
     public void startUpdatingThread() {
         Thread thread = new Thread(() -> {
-            while (!isDataUpdated(baselineMatrixAndSegments)) {
+            boolean success = updateBaselineAndSegmentsFromServer();;
+            while (!isDataUpdated(baselineMatrixAndSegments) || !success) {
                 try {
                     Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                    success = updateBaselineAndSegmentsFromServer();
+                } catch (InterruptedException ignored) { }
             }
             isAvailable.set(true);
             logger.info("Поменян статус сервера: " + isAvailable.get());
@@ -66,6 +69,7 @@ public class UpdateBaselineAndSegmentsService {
             baselineMatrixAndSegments = restTemplate.getForEntity(url, BaselineMatrixAndSegments.class).getBody();
             lastUpdate = System.currentTimeMillis();
             StaticStorage.saveBaselineAndSegments(baselineMatrixAndSegments);
+            logger.info("baselineMatrixAndSegments обновлён");
             return true;
         } catch (Exception e) {
             logger.error("Не удалось обновить baselineMatrixAndSegments: " + e.getMessage());
