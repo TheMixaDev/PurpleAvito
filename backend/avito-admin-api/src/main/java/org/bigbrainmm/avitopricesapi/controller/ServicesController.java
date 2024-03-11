@@ -81,7 +81,7 @@ public class ServicesController {
             HttpStatusCode statusCode = Objects.requireNonNull(responseSpec.toBodilessEntity().block()).getStatusCode();
             actual = statusCode == HttpStatusCode.valueOf(200);
         } catch (WebClientResponseException e) {
-            if (e.getStatusCode() != HttpStatusCode.valueOf(400))
+            if (e.getStatusCode() != HttpStatusCode.valueOf(503))
                 connected = false;
         } catch (Exception e) {
             connected = false;
