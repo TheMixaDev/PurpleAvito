@@ -14,8 +14,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -146,34 +144,34 @@ public class MatrixController {
 
     @PostMapping(value = "/setup", produces = "application/json")
     @Operation(summary = "Установить текущую стандартную матрицу по имени")
-    public ResponseEntity<String> setup(@RequestBody SetupMatrixRequest request) {
+    public ResponseEntity<MessageResponse> setup(@RequestBody SetupMatrixRequest request) {
         SourceBaseline sourceBaseline = sourceBaselineRepository.findByName(request.getName());
         if (sourceBaseline == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("{ \"message\": \"Матрица с таким именем не найдена\" }");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new MessageResponse("Матрица с именем " + request.getName() + " не найдена"));
         }
         baselineMatrixAndSegments.setBaselineMatrix(new Matrix(sourceBaseline.getName()));
         // Сохранение изменений
         StaticStorage.saveBaselineAndSegments(baselineMatrixAndSegments);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return ResponseEntity.ok(new MessageResponse("Матрица " + request.getName() + " установлена"));
     }
 
     @PostMapping(value = "/setup/segments", produces = "application/json")
     @Operation(summary = "Установить в дискаунт группах матрицы по id сгемента и name discount_table")
-    public ResponseEntity<String> setupSegment(@RequestBody SetupDiscountSegmentsRequest request) {
+    public ResponseEntity<MessageResponse> setupSegment(@RequestBody SetupDiscountSegmentsRequest request) {
         if (request.getDiscountSegments().isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{ \"message\": \"Список сегментов пуст\" }");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new MessageResponse("Список сегментов пуст"));
         }
         Optional<DiscountSegment> discountSegment;
         DiscountBaseline discountBaseline;
         for (var pair : request.getDiscountSegments()) {
             discountSegment = baselineMatrixAndSegments.getDiscountSegments().stream().filter(ds -> Objects.equals(ds.getId(), pair.getSegmentId())).findAny();
             if (discountSegment.isEmpty()) return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("{ \"message\": \"Сегмент с идентификатором " + pair.getSegmentId() + " не найден\" }");
+                    .body(new MessageResponse("Сегмент с идентификатором " + pair.getSegmentId() + " не найден"));
             discountBaseline = discountBaselineRepository.findByName(pair.getDiscountMatrixName());
             if (pair.getDiscountMatrixName() != null) {
                 if (!pair.getDiscountMatrixName().equals("null")) {
                     if (discountBaseline == null) return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                            .body("{ \"message\": \"Матрица с именем " + pair.getDiscountMatrixName() + " не найдена\" }");
+                            .body(new MessageResponse("Матрица с именем \" + pair.getDiscountMatrixName() + \" не найдена"));
                 }
             }
         }
@@ -191,7 +189,7 @@ public class MatrixController {
         for (var pair : request.getDiscountSegments()) {
             if (pair.getDiscountMatrixName() == null || pair.getDiscountMatrixName().equals("null")) continue;
             if (copy.stream().filter(ds1 -> Objects.equals(ds1.getName(), pair.getDiscountMatrixName())).count() > 1) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{ \"message\": \"Нарушена уникальность имён скидочных матриц. 1 - сегмент, одна скидочная матрица или null\" }");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new MessageResponse("Нарушена уникальность имён скидочных матриц. 1 - сегмент, одна скидочная матрица или null"));
             }
         }
         // Сохранение изменений

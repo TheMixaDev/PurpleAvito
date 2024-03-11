@@ -11,7 +11,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Schema(description = "Сообщение об ошибке")
-public class ErrorResponse {
-    @Schema(description = "Текст ошибки", example = "Категория с выбранным id не существует")
+public class MessageResponse {
+    @Schema(description = "Текст сообщения", example = "Любая информация в ответе запроса")
     private String message;
 }
