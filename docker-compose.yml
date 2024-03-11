@@ -78,6 +78,7 @@ services:
     environment:
       - JAVA_TOOL_OPTIONS=-Dserver.port=8081
       - AVITO_ADMIN_API_URL=http://avito-admin-api:8080
+      - MAX_DATABASE_PING_IN_MILLIS=50
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-primary:5432/avito_db
       - SPRING_DATASOURCE_USERNAME=hulumulu
       - SPRING_DATASOURCE_PASSWORD=Qwerty123
@@ -95,6 +96,7 @@ services:
       - JAVA_TOOL_OPTIONS=-Dserver.port=8082
       - AVITO_ADMIN_API_URL=http://avito-admin-api:8080
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-replica-1:5433/avito_db
+      - MAX_DATABASE_PING_IN_MILLIS=50
       - SPRING_DATASOURCE_USERNAME=hulumulu
       - SPRING_DATASOURCE_PASSWORD=Qwerty123
   

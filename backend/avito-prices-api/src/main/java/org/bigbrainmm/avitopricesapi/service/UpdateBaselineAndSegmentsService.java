@@ -30,6 +30,8 @@ import static org.bigbrainmm.avitopricesapi.StaticStorage.*;
 public class UpdateBaselineAndSegmentsService {
     @Value("${AVITO_ADMIN_API_URL}")
     private String adminServerUrl;
+    @Value("${MAX_DATABASE_PING_IN_MILLIS}")
+    private int maxDatabasePingInMillis;
 
     private final JdbcTemplate jdbcTemplate;
     private final RestTemplate restTemplate;
@@ -78,6 +80,7 @@ public class UpdateBaselineAndSegmentsService {
                     Thread.sleep(1000);
                 } catch (InterruptedException ignored) { }
             }
+            logger.info("Соединение с базой данных восстановлено");
             isAvailable.set(true);
             logger.info("Поменян статус сервера: " + isAvailable.get());
         });
@@ -116,7 +119,6 @@ public class UpdateBaselineAndSegmentsService {
         return true;
     }
 
-    private final int maxDatabasePingInMillis = 200;
     private final ExecutorService executor = Executors.newCachedThreadPool();
     public boolean dataBaseIsAvailable() {
         try {
