@@ -73,50 +73,56 @@ public class MatrixController {
             if (name.equals("discount_matrix_new")) jdbcTemplate.update("create table " + newName + " (microcategory_id int, location_id int, price int);");
             else jdbcTemplate.update("create table " + newName + " as select * from " + name);
             jdbcTemplate.update("ALTER TABLE " + newName + " ADD CONSTRAINT " + newName + "_pkey PRIMARY KEY (location_id, microcategory_id);");
-            if (name.contains("baseline_matrix")) {
-                sourceBaselineRepository.save(new SourceBaseline(newName));
-            } else if (name.contains("discount_matrix")) {
-                discountBaselineRepository.save(new DiscountBaseline(newName));
-            }
-            // Заполнение данными
-            String insertion = "insert into " + newName + " (microcategory_id, location_id, price) values ";
-            StringBuilder query = new StringBuilder(insertion);
-            String nullLiteral = "null";
-            BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()));
-            String row;
-            int line = 0;
-            while ((row = reader.readLine()) != null) {
-                counter++;
-                var slt = row.split(",");
-                if (slt.length < 3) {
-                    notCompletedRows.add(counter);
-                    continue;
+            try {
+                // Заполнение данными
+                String insertion = "insert into " + newName + " (microcategory_id, location_id, price) values ";
+                StringBuilder query = new StringBuilder(insertion);
+                String nullLiteral = "null";
+                BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()));
+                String row;
+                int line = 0;
+                while ((row = reader.readLine()) != null) {
+                    counter++;
+                    var slt = row.split(",");
+                    if (slt.length < 3) {
+                        notCompletedRows.add(counter);
+                        continue;
+                    }
+                    if (
+                            !((isNumeric(slt[0]) || slt[0].equals(nullLiteral)) &&
+                                    (isNumeric(slt[1]) || slt[1].equals(nullLiteral)) &&
+                                    (isNumeric(slt[2]) || slt[2].equals(nullLiteral)))
+                    ) {
+                        notCompletedRows.add(counter);
+                        continue;
+                    }
+                    query.append("(").append(slt[0]).append(", ").append(slt[1]).append(", ").append(slt[2]).append(")");
+                    query.append(", ");
+                    line++;
+                    if (line == MAX_SQL_PACKET_SIZE) {
+                        query.deleteCharAt(query.length() - 2);
+                        query.append("ON CONFLICT (microcategory_id, location_id) DO UPDATE SET price = EXCLUDED.price;");
+                        jdbcTemplate.update(query.toString());
+                        System.out.println("Sent " + line + " rows to " + newName);
+                        query = new StringBuilder(insertion);
+                        line = 0;
+                    }
                 }
-                if (
-                        !((isNumeric(slt[0]) || slt[0].equals(nullLiteral)) &&
-                        (isNumeric(slt[1]) || slt[1].equals(nullLiteral)) &&
-                        (isNumeric(slt[2]) || slt[2].equals(nullLiteral)))
-                ) {
-                    notCompletedRows.add(counter);
-                    continue;
-                }
-                query.append("(").append(slt[0]).append(", ").append(slt[1]).append(", ").append(slt[2]).append(")");
-                query.append(", ");
-                line++;
-                if (line == MAX_SQL_PACKET_SIZE) {
+                if (line > 0) {
                     query.deleteCharAt(query.length() - 2);
                     query.append("ON CONFLICT (microcategory_id, location_id) DO UPDATE SET price = EXCLUDED.price;");
                     jdbcTemplate.update(query.toString());
                     System.out.println("Sent " + line + " rows to " + newName);
-                    query = new StringBuilder(insertion);
-                    line = 0;
                 }
-            }
-            if(line > 0) {
-                query.deleteCharAt(query.length() - 2);
-                query.append("ON CONFLICT (microcategory_id, location_id) DO UPDATE SET price = EXCLUDED.price;");
-                jdbcTemplate.update(query.toString());
-                System.out.println("Sent " + line + " rows to " + newName);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{ \"message\": \" Неверный формат тела запроса. \" }");
+            } finally {
+                if (name.contains("baseline_matrix")) {
+                    sourceBaselineRepository.save(new SourceBaseline(newName));
+                } else if (name.contains("discount_matrix")) {
+                    discountBaselineRepository.save(new DiscountBaseline(newName));
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
