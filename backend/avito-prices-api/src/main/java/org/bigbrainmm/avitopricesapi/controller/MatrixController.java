@@ -44,9 +44,9 @@ public class MatrixController {
         return setupMatrixRequest;
     }
 
-    @PostMapping(value = "/setup", produces = "application/json")
+    @PostMapping(value = "/setup/baseline", produces = "application/json")
     @Operation(summary = "Установить текущую стандартную матрицу по имени")
-    public ResponseEntity<MessageResponse> setup(@RequestBody SetupMatrixRequest request) {
+    public ResponseEntity<MessageResponse> setupBaseline(@RequestBody SetupMatrixRequest request) {
         isAvailable.set(false);
         logger.info("Поменян статус сервера: " + isAvailable.get());
         SourceBaseline sourceBaseline = sourceBaselineRepository.findByName(request.getName());
@@ -71,7 +71,7 @@ public class MatrixController {
 
     @PostMapping(value = "/setup/segments", produces = "application/json")
     @Operation(summary = "Установить в дискаунт группах матрицы по id сгемента и name discount_table")
-    public ResponseEntity<MessageResponse> setupSegment(@RequestBody SetupDiscountSegmentsRequest request) {
+    public ResponseEntity<MessageResponse> setupSegments(@RequestBody SetupDiscountSegmentsRequest request) {
         isAvailable.set(false);
         logger.info("Поменян статус сервера: " + isAvailable.get());
         if (request.getDiscountSegments().isEmpty()) {
@@ -82,12 +82,12 @@ public class MatrixController {
         Optional<DiscountSegment> discountSegment;
         DiscountBaseline discountBaseline;
         for (var pair : request.getDiscountSegments()) {
-            discountSegment = baselineMatrixAndSegments.getDiscountSegments().stream().filter(ds -> Objects.equals(ds.getId(), pair.getSegmentId())).findAny();
+            discountSegment = baselineMatrixAndSegments.getDiscountSegments().stream().filter(ds -> Objects.equals(ds.getId(), pair.getId())).findAny();
             if (discountSegment.isEmpty()) return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new MessageResponse("Сегмент с идентификатором " + pair.getSegmentId() + " не найден"));
-            discountBaseline = discountBaselineRepository.findByName(pair.getDiscountMatrixName());
-            if (pair.getDiscountMatrixName() != null) {
-                if (!pair.getDiscountMatrixName().equals("null")) {
+                    .body(new MessageResponse("Сегмент с идентификатором " + pair.getId() + " не найден"));
+            discountBaseline = discountBaselineRepository.findByName(pair.getName());
+            if (pair.getName() != null) {
+                if (!pair.getName().equals("null")) {
                     if (discountBaseline == null) return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                             .body(new MessageResponse("Матрица с именем \" + pair.getDiscountMatrixName() + \" не найдена"));
                 }
@@ -98,15 +98,15 @@ public class MatrixController {
         for (var ds : baselineMatrixAndSegments.getDiscountSegments()) copy.add(new DiscountSegment(ds.getId(), ds.getName()));
 
         for (var pair : request.getDiscountSegments()) {
-            DiscountSegment ds = copy.stream().filter(ds1 -> Objects.equals(ds1.getId(), pair.getSegmentId())).findAny().get();
-            if (pair.getDiscountMatrixName() == null) ds.setName(null);
-            else if (pair.getDiscountMatrixName().equals("null")) ds.setName(null);
-            else ds.setName(pair.getDiscountMatrixName());
+            DiscountSegment ds = copy.stream().filter(ds1 -> Objects.equals(ds1.getId(), pair.getId())).findAny().get();
+            if (pair.getName() == null) ds.setName(null);
+            else if (pair.getName().equals("null")) ds.setName(null);
+            else ds.setName(pair.getName());
         }
         // Проверка уникальности
         for (var pair : request.getDiscountSegments()) {
-            if (pair.getDiscountMatrixName() == null || pair.getDiscountMatrixName().equals("null")) continue;
-            if (copy.stream().filter(ds1 -> Objects.equals(ds1.getName(), pair.getDiscountMatrixName())).count() > 1) {
+            if (pair.getName() == null || pair.getName().equals("null")) continue;
+            if (copy.stream().filter(ds1 -> Objects.equals(ds1.getName(), pair.getName())).count() > 1) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new MessageResponse("Нарушена уникальность имён скидочных матриц. 1 - сегмент, одна скидочная матрица или null"));
             }
         }
@@ -122,5 +122,20 @@ public class MatrixController {
         baselineMatrixAndSegments.setDiscountSegments(copy);
         StaticStorage.saveBaselineAndSegments(baselineMatrixAndSegments);
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping(value = "/setup/baseline_segments", produces = "application/json")
+    @Operation(summary = "Установить текущую стандартную матрицу по имени и одновременно обновить группы скидочных сегментов. " +
+            "По сути объединённый запрос /setup и /setup/segments")
+    public ResponseEntity<MessageResponse> setupBaselineSegments(@RequestBody BaselineMatrixAndSegments request) {
+        // isAvailable устаналивают методы
+
+        ResponseEntity<MessageResponse> baselineResponse = setupBaseline(new SetupMatrixRequest(request.getBaselineMatrix().getName()));
+        if (baselineResponse.getStatusCode() != HttpStatus.OK) return baselineResponse;
+
+        ResponseEntity<MessageResponse> segmentsResponse = setupSegments(new SetupDiscountSegmentsRequest(request.getDiscountSegments()));
+        if (segmentsResponse.getStatusCode() != HttpStatus.OK) return segmentsResponse;
+
+        return ResponseEntity.ok(new MessageResponse("Матрицы и сегменты успешно обновлены"));
     }
 }

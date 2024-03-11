@@ -1,5 +1,6 @@
 version: '3.8'
 services:
+
   postgres_primary:
     image: postgres:14-alpine
     container_name: postgres_primary
@@ -18,7 +19,8 @@ services:
       -c max_wal_senders=10 
       -c max_replication_slots=10 
       -c hot_standby_feedback=on;
-  postgres_replica:
+
+  postgres_replica_1:
     image: postgres:14-alpine
     user: postgres
     restart: always
@@ -27,7 +29,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    container_name: postgres_replica
+    container_name: postgres_replica_1
     ports:
       - "5433:5432"
     environment:
@@ -47,6 +49,7 @@ services:
       "
     depends_on:
       - avito_admin_api
+
   avito_admin_api:
     container_name: avito_admin_api
     build: ./backend/avito-admin-api
@@ -59,14 +62,29 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres_primary:5432/avito_db
       - SPRING_DATASOURCE_USERNAME=hulumulu
       - SPRING_DATASOURCE_PASSWORD=Qwerty123
-  avito_prices_api:
-    container_name: avito_prices_api
+      - AVITO_PRICES_SERVICES_URLS=http://avito_prices_api_primary:8081,http://avito_prices_api_replica_1:8082
+  
+  avito_prices_api_primary:
+    container_name: avito_prices_api_primary
     build: ./backend/avito-prices-api
     restart: always
     ports:
       - "8081:8081"
     depends_on:
-      - postgres_primary
+      - avito_admin_api
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres_primary:5432/avito_db
+      - SPRING_DATASOURCE_USERNAME=hulumulu
+      - SPRING_DATASOURCE_PASSWORD=Qwerty123
+
+  avito_prices_api_replica_1:
+    container_name: avito_prices_api_replica_1
+    build: ./backend/avito-prices-api
+    restart: always
+    ports:
+      - "8082:8082"
+    depends_on:
+      - avito_prices_api_primary
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres_primary:5432/avito_db
       - SPRING_DATASOURCE_USERNAME=hulumulu

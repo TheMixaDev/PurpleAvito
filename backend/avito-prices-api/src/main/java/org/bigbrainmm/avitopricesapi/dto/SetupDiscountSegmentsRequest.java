@@ -14,6 +14,6 @@ import java.util.List;
 @Setter
 @Schema(description = "Установить скидочные матрицы для соответствующих сегментов")
 public class SetupDiscountSegmentsRequest {
-    @Schema(description = "Лист из пар: идентификатор сегмента <-> имя скидочной матрицы для установки")
-    private List<PairSegmentIdDiscountMatrix<Long, String>> discountSegments;
+    @Schema(description = "Лист из пар: идентификатор сегмента, имя скидочной матрицы для установки")
+    private List<DiscountSegment> discountSegments;
 }

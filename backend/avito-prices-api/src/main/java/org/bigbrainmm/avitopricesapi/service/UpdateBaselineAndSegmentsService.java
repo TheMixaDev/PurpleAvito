@@ -34,8 +34,8 @@ public class UpdateBaselineAndSegmentsService {
         isAvailable.set(false);
         logger.info("Поменян статус сервера: " + isAvailable.get());
         logger.info("Обновление baseline и discount segments");
-        updateBaselineAndSegmentsFromServer();
-        if (isDataUpdated(baselineMatrixAndSegments)) {
+        boolean success = updateBaselineAndSegmentsFromServer();
+        if (success && isDataUpdated(baselineMatrixAndSegments)) {
             logger.info("baselineMatrixAndSegments обновлён");
             isAvailable.set(true);
             logger.info("Поменян статус сервера: " + isAvailable.get());
@@ -61,10 +61,16 @@ public class UpdateBaselineAndSegmentsService {
         thread.start();
     }
 
-    public void updateBaselineAndSegmentsFromServer() {
-        baselineMatrixAndSegments = restTemplate.getForEntity(url, BaselineMatrixAndSegments.class).getBody();
-        lastUpdate = System.currentTimeMillis();
-        StaticStorage.saveBaselineAndSegments(baselineMatrixAndSegments);
+    public boolean updateBaselineAndSegmentsFromServer() {
+        try {
+            baselineMatrixAndSegments = restTemplate.getForEntity(url, BaselineMatrixAndSegments.class).getBody();
+            lastUpdate = System.currentTimeMillis();
+            StaticStorage.saveBaselineAndSegments(baselineMatrixAndSegments);
+            return true;
+        } catch (Exception e) {
+            logger.error("Не удалось обновить baselineMatrixAndSegments: " + e.getMessage());
+            return false;
+        }
     }
 
     public boolean isDataUpdated(BaselineMatrixAndSegments t) {
