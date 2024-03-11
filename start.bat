@@ -1,4 +1,4 @@
-docker rmi -f purpleavitoback-avito_admin_api
-docker rmi -f purpleavitoback-avito_prices_api_primary
-docker rmi -f purpleavitoback-avito_prices_api_replica_1
+docker rmi -f purpleavitoback-avito-admin-api
+docker rmi -f purpleavitoback-avito-prices-api-primary
+docker rmi -f purpleavitoback-avito-prices-api-replica-1
 docker-compose up --build

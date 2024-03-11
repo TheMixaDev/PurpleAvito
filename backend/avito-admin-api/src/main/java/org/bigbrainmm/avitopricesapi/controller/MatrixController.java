@@ -11,6 +11,7 @@ import org.bigbrainmm.avitopricesapi.entity.SourceBaseline;
 import org.bigbrainmm.avitopricesapi.repository.DiscountBaselineRepository;
 import org.bigbrainmm.avitopricesapi.repository.SourceBaselineRepository;
 import org.bigbrainmm.avitopricesapi.service.SOCDelegatorService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +36,9 @@ public class MatrixController {
     private final SourceBaselineRepository sourceBaselineRepository;
     private final SOCDelegatorService socDelegatorService;
     private final JdbcTemplate jdbcTemplate;
+
+    @Value("${DEMO_SERVER}")
+    private boolean isDemo;
     private final int MAX_SQL_PACKET_SIZE = 100000;
 
     @GetMapping(produces = "application/json")
@@ -70,6 +74,11 @@ public class MatrixController {
         }
         List<Integer> notCompletedRows = new ArrayList<>();
         try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()));
+            long lines = reader.lines().count();
+            if(lines > 300000 && isDemo) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{ \"message\": \"Вы находитесь на демо-сервере. Демо-сервер не может обрабатывать большие файлы (более 300,000 строк) в связи с ограничением размера жесткого диска арендуемого сервера. Для включения этой возможности выставите DEMO_SERVER=false в параметрах окружения сервера админ-панели.\", \"showModal\": true }");
+            }
             int counter = 0;
             if (name.equals("discount_matrix_new")) jdbcTemplate.update("create table " + newName + " (microcategory_id int, location_id int, price int);");
             else jdbcTemplate.update("create table " + newName + " as select * from " + name);
@@ -79,7 +88,7 @@ public class MatrixController {
                 String insertion = "insert into " + newName + " (microcategory_id, location_id, price) values ";
                 StringBuilder query = new StringBuilder(insertion);
                 String nullLiteral = "null";
-                BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()));
+                reader = new BufferedReader(new InputStreamReader(file.getInputStream()));
                 String row;
                 int line = 0;
                 while ((row = reader.readLine()) != null) {
@@ -166,11 +175,7 @@ public class MatrixController {
     @GetMapping(value = "/setup", produces = "application/json")
     @Operation(summary = "Посмотреть текущую стандартную матрицу и список скидочных матриц")
     public BaselineMatrixAndSegments setup() {
-        BaselineMatrixAndSegments setupMatrixRequest = new BaselineMatrixAndSegments();
-        setupMatrixRequest.setBaselineMatrix(baselineMatrixAndSegments.getBaselineMatrix());
-        setupMatrixRequest.setDiscountSegments(baselineMatrixAndSegments.getDiscountSegments());
-        socDelegatorService.sendCurrentBaselineAndSegmentsToSOCs();
-        return setupMatrixRequest;
+        return baselineMatrixAndSegments;
     }
 
     @PostMapping(value = "/setup/baseline", produces = "application/json")
