@@ -79,5 +79,8 @@ export const FrontendService = {
         } else {
             return (fileSizeInBytes / (1024 * 1024 * 1024)).toFixed(1) + ' Гб';
         }
+    },
+    async updateUI() {
+        await new Promise(resolve => setTimeout(resolve, 0));
     }
 }

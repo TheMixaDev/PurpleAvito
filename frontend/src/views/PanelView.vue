@@ -47,7 +47,7 @@ import UIProgressBar from '@/components/ui/UIProgressBar.vue';
                 :pagination="NewMatrixStore.pagination"
                 @clearClick="clear"
                 :clearEnabled="true"
-                :clearState="NewMatrixStore.items.length > 0 || originFile != null"
+                :clearState="(NewMatrixStore.items.length > 0 || originFile != null) && (!fileLoading && !matrixPublishing)"
                 @creationClick="NewMatrixStore.createElement"
                 :creationEnabled="originFile == null"
                 @pageChange="NewMatrixStore.handleSegmentsPageChange"
@@ -88,7 +88,15 @@ import UIProgressBar from '@/components/ui/UIProgressBar.vue';
                 </UITableRow>
             </TableComponent>
             <div class="mx-auto max-w-screen-xl p-3 px-4 lg:px-12">
-                <p class="text-center">
+                <UIButton color="primary" class=" w-full z-0" @click="selectFile" :disabled="fileLoading || originFile != null || matrixPublishing">
+                    <font-awesome-icon :icon="['fas', 'download']"/>
+                    Загрузить из файла
+                </UIButton>
+                <UIButton color="secondary" class="mt-4 w-full z-0" :disabled="((NewMatrixStore.items.length < 1 || fileLoading) && originFile == null) || matrixPublishing" @click="createMatrix">
+                    <font-awesome-icon :icon="['fas', 'plus']"/>
+                    {{ (parentMatrix != 0 ? `Клонировать` : `Создать`) }} матрицу ({{ (parentMatrix != 0 && SettingsStore.matrices[parentMatrix].startsWith("baseline") ? `Основная` : `Скидочная`) }})
+                </UIButton>
+                <p class="text-center mt-2">
                     {{ (parentMatrix != 0 ? `Измененных` : `Всего`) }}
                     <span v-if="originFile == null">
                         строк матрицы - {{ NewMatrixStore.items.length }}
@@ -97,14 +105,6 @@ import UIProgressBar from '@/components/ui/UIProgressBar.vue';
                         данных - {{ FrontendService.formatFileSize(originFile.size) }}
                     </span>
                 </p>
-                <UIButton color="primary" class="mt-4 w-full z-0" @click="selectFile" :disabled="fileLoading || originFile != null || matrixPublishing">
-                    <font-awesome-icon :icon="['fas', 'download']"/>
-                    Загрузить из файла
-                </UIButton>
-                <UIButton color="secondary" class="mt-4 w-full z-0" :disabled="((NewMatrixStore.items.length < 1 || fileLoading) && originFile == null) || matrixPublishing" @click="createMatrix">
-                    <font-awesome-icon :icon="['fas', 'plus']"/>
-                    {{ (parentMatrix != 0 ? `Клонировать` : `Создать`) }} матрицу ({{ (parentMatrix != 0 && SettingsStore.matrices[parentMatrix].startsWith("baseline") ? `Основная` : `Скидочная`) }})
-                </UIButton>
                 <UIProgressBar
                     v-if="matrixPublishing"
                     :percent="percentLoading">
@@ -114,6 +114,11 @@ import UIProgressBar from '@/components/ui/UIProgressBar.vue';
                     <span v-else>
                         {{ percentLoading < 100 ? `Загрузка матрицы на сервер...` : `Обновление базы данных...` }}
                     </span>
+                </UIProgressBar>
+                <UIProgressBar
+                    v-if="fileLoading"
+                    :percent="percentLoading">
+                    Загрузка файла...
                 </UIProgressBar>
             </div>
         </div>
@@ -152,8 +157,8 @@ export default {
             input.onchange = e => {
                 this.fileLoading = true;
                 let file = e.target.files[0];
+                let unlockLoading = () => this.fileLoading = false;
                 if(file.size / (1024 * 1024) > 16) {
-                    let unlockLoading = () => this.fileLoading = false;
                     if(file.name.endsWith(".csv")) {
                         let setFile = () => {
                             NewMatrixStore.clear();
@@ -177,15 +182,25 @@ export default {
                     }
                 } else {
                     let reader = new FileReader();
-                    reader.onload = e => {
+                    this.percentLoading = 0;
+                    reader.onload = async e => {
                         let contents = e.target.result;
                         let parsed = [];
                         let lines = 0;
                         let sucessful = 0;
                         let errors = [];
+                        let lastPercentUpdate = Date.now();
                         try {
                             let json = JSON.parse(contents);
+                            let total = json.length;
+                            this.percentLoading = 12.5;
+                            await FrontendService.updateUI();
                             for(let item of json) {
+                                if(Date.now() - lastPercentUpdate > 10 || lines == total - 1) {
+                                    this.percentLoading = Math.round((lines * 1000) / total / 8 + 125) / 10 / 8;
+                                    await FrontendService.updateUI();
+                                    lastPercentUpdate = Date.now();
+                                }
                                 let values = [];
                                 lines++;
                                 for(let key in item) {
@@ -203,10 +218,17 @@ export default {
                             }
                         }
                         catch {
-                            for(let line of contents.split('\n')) {
+                            let splitted = contents.split('\n');
+                            let total = splitted.length;
+                            for(let line of splitted) {
+                                if(Date.now() - lastPercentUpdate > 10 || lines == total - 1) {
+                                    this.percentLoading = Math.round((lines * 1000) / total / 4) / 10;
+                                    await FrontendService.updateUI();
+                                    lastPercentUpdate = Date.now();
+                                }
+                                lines++;
                                 const matches = line.match(regex);
                                 if(matches) {
-                                    lines++;
                                     try {
                                         let microcategory_id = FrontendService.valueParser(matches[1] || matches[4]);
                                         let location_id = FrontendService.valueParser(matches[2] || matches[5]);
@@ -220,17 +242,23 @@ export default {
                                 }
                             }
                         }
-                        this.$notify({type: 'success', text: `Загружено ${sucessful} из ${lines} элементов`});
+                        let updateProgress = progress => {
+                            this.percentLoading = Math.round(progress * 1000 / 4 * 3 + 250) / 10;
+                        }
+                        let unlockAndNotify = () => {
+                            unlockLoading();
+                            this.$notify({type: 'success', text: `Загружено ${sucessful} из ${lines} элементов`});
+                        }
                         if(NewMatrixStore.items.length > 0) {
                             FrontendService.showFileModal(
                                 () => {
-                                    NewMatrixStore.addItems(parsed, () => this.fileLoading = false);
+                                    NewMatrixStore.addItems(parsed, unlockAndNotify, updateProgress);
                                 }, () => {
                                     NewMatrixStore.clear();
-                                    NewMatrixStore.addItems(parsed, () => this.fileLoading = false);
+                                    NewMatrixStore.addItems(parsed, unlockAndNotify, updateProgress);
                             });
                         } else {
-                            NewMatrixStore.addItems(parsed, () => this.fileLoading = false);
+                            NewMatrixStore.addItems(parsed, unlockAndNotify, updateProgress);
                         }
                     };
                     reader.readAsText(file);
@@ -246,41 +274,42 @@ export default {
             NewMatrixStore.handleSegmentsPageChange();
             this.matrixPublishing = false;
         },
-        async formFile() {
-            return new Promise((resolve) => {
-                let result = [];
-                let total = NewMatrixStore.items.length;
-                for(let index in NewMatrixStore.items) {
-                    let loading = Math.round((index * 100) / total);
-                    if(loading != this.percentLoading) {
-                        this.percentLoading = loading;
-                        console.log(`progress: ${this.percentLoading}%`);
-                    }
-                    let item = NewMatrixStore.items[index];
-                    try {
-                        let microcategory_id = FrontendService.valueParser(item.microcategory_id);
-                        let location_id = FrontendService.valueParser(item.location_id);
-                        let price = FrontendService.valueParser(item.price);
-                        if(!microcategory_id || !location_id)
-                            return this.redirectToError(index);
-                        result.push(`${microcategory_id},${location_id},${price}`);
-                    } catch {
-                        return this.redirectToError(index);
-                    }
+        async formFile(progress) {
+            let result = [];
+            let total = NewMatrixStore.items.length;
+            let lastPercentUpdate = Date.now();
+            for(let index in NewMatrixStore.items) {
+                let loading = Math.round((index * 1000) / total) / 10;
+                if(Date.now() - lastPercentUpdate > 10 || index == total - 1) {
+                    progress(loading);
+                    await FrontendService.updateUI();
+                    lastPercentUpdate = Date.now();
                 }
-                resolve(new File([new Blob([result.join("\n")], { type: 'text/plain' })], 'matrix.csv', { type: 'text/plain' }));
-            })
+                let item = NewMatrixStore.items[index];
+                try {
+                    let microcategory_id = FrontendService.valueParser(item.microcategory_id);
+                    let location_id = FrontendService.valueParser(item.location_id);
+                    let price = FrontendService.valueParser(item.price);
+                    if(!microcategory_id || !location_id)
+                        return this.redirectToError(index);
+                    result.push(`${microcategory_id},${location_id},${price}`);
+                } catch {
+                    return this.redirectToError(index);
+                }
+            }
+            return (new File([new Blob([result.join("\n")], { type: 'text/plain' })], 'matrix.csv', { type: 'text/plain' }));
         },
         createMatrix() {
             this.percentLoading = 0;
             this.matrixPublishing = true;
+            this.formingFile = true;
             setTimeout((async () => {
                 let file = this.originFile;
                 if(file == null) {
-                    this.formingFile = true;
-                    file = await this.formFile();
-                    this.formingFile = false;
+                    await FrontendService.updateUI();
+                    file = await this.formFile(progress => this.percentLoading = progress);
                 }
+                this.formingFile = false;
                 this.percentLoading = 0;
                 MatrixService.createMatrix(this.parentMatrix, file, data => {
                     this.$notify({type: 'success', text: data.message});
@@ -296,7 +325,7 @@ export default {
                 }, () => {
                     this.$notify({type: 'error', text: 'Произошла ошибка при создании матрицы'});
                     this.matrixPublishing = false;
-                }, event => this.percentLoading = Math.round((event.loaded * 100) / event.total))
+                }, event => this.percentLoading = Math.round((event.loaded * 1000) / event.total) / 10)
             }), 0);
         },
         clear() {

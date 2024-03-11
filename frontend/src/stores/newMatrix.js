@@ -2,6 +2,7 @@ import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import { Pagination } from '@/models/pagination';
 import { MatrixItem } from '@/models/matrixItem';
+import { FrontendService } from '@/services/FrontendService';
 
 export const useNewMatrixStore = defineStore('newMatrix', () => {
     const items = ref([]);
@@ -59,10 +60,19 @@ export const useNewMatrixStore = defineStore('newMatrix', () => {
         applySearch();
     }
 
-    function addItems(newItems, callback) {
+    function addItems(newItems, callback, progress) {
         setTimeout(async () => {
-            for(let i of newItems)
-                items.value.push(i);
+            progress(0);
+            let total = newItems.length;
+            let lastPercentUpdate = Date.now();
+            for(let i in newItems) {
+                if(Date.now() - lastPercentUpdate > 10 || i == total - 1) {
+                    progress(i / total);
+                    await FrontendService.updateUI();
+                    lastPercentUpdate = Date.now();
+                }
+                items.value.push(newItems[i]);
+            }
             applySearch();
             callback();
         }, 0);
