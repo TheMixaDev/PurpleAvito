@@ -28,7 +28,7 @@ services:
       test: 'pg_isready -U hulumulu --dbname=postgres'
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
     container_name: postgres-replica-1
     ports:
       - "5433:5433"
@@ -50,6 +50,36 @@ services:
     depends_on:
       - avito-admin-api
 
+  postgres-replica-2:
+    image: postgres:14-alpine
+    user: postgres
+    restart: always
+    healthcheck:
+      test: 'pg_isready -U hulumulu --dbname=postgres'
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    container_name: postgres-replica-2
+    ports:
+      - "5434:5434"
+    environment:
+      PGUSER: replicator
+      PGPASSWORD: Qwerty123
+    command: |
+      bash -c "
+      rm -rf /var/lib/postgresql/data/*
+      until pg_basebackup --pgdata=/var/lib/postgresql/data -R --slot=replication_slot --host=postgres-primary --port=5432
+      do
+      echo 'Waiting for primary to connect...'
+      sleep 1s
+      done
+      echo 'Backup done, starting replica...'
+      chmod 0700 /var/lib/postgresql/data
+      postgres -p 5434
+      "
+    depends_on:
+      - avito-admin-api
+
   avito-admin-api:
     container_name: avito-admin-api
     build: ./backend/avito-admin-api
@@ -62,7 +92,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-primary:5432/avito_db
       - SPRING_DATASOURCE_USERNAME=hulumulu
       - SPRING_DATASOURCE_PASSWORD=Qwerty123
-      - AVITO_PRICES_SERVICES_URLS=http://avito-prices-api-primary:8081,http://avito-prices-api-replica-1:8082
+      - AVITO_PRICES_SERVICES_URLS=http://avito-prices-api-primary:8081,http://avito-prices-api-replica-1:8082,http://avito-prices-api-replica-2:8083
       - DEMO_SERVER=true
       - AVITO_PRICES_API_STATUS_TIMEOUT=500 # Increase if servers are VERY far away apart from each other
   
@@ -96,6 +126,23 @@ services:
       - JAVA_TOOL_OPTIONS=-Dserver.port=8082
       - AVITO_ADMIN_API_URL=http://avito-admin-api:8080
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-replica-1:5433/avito_db
+      - MAX_DATABASE_PING_IN_MILLIS=50
+      - SPRING_DATASOURCE_USERNAME=hulumulu
+      - SPRING_DATASOURCE_PASSWORD=Qwerty123
+
+  avito-prices-api-replica-2:
+    container_name: avito-prices-api-replica-2
+    build: ./backend/avito-prices-api
+    restart: always
+    ports:
+      - "8083:8083"
+    depends_on:
+      - avito-admin-api
+      - postgres-replica-2
+    environment:
+      - JAVA_TOOL_OPTIONS=-Dserver.port=8083
+      - AVITO_ADMIN_API_URL=http://avito-admin-api:8080
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-replica-2:5434/avito_db
       - MAX_DATABASE_PING_IN_MILLIS=50
       - SPRING_DATASOURCE_USERNAME=hulumulu
       - SPRING_DATASOURCE_PASSWORD=Qwerty123
