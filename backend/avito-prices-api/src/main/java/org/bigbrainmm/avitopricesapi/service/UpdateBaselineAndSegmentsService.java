@@ -12,11 +12,16 @@ import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.sql.SQLOutput;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static org.bigbrainmm.avitopricesapi.StaticStorage.*;
 
@@ -26,6 +31,7 @@ public class UpdateBaselineAndSegmentsService {
     @Value("${AVITO_ADMIN_API_URL}")
     private String adminServerUrl;
 
+    private final JdbcTemplate jdbcTemplate;
     private final RestTemplate restTemplate;
     private final DiscountBaselineRepository discountBaselineRepository;
     private final SourceBaselineRepository sourceBaselineRepository;
@@ -49,13 +55,27 @@ public class UpdateBaselineAndSegmentsService {
         }
     }
 
+
     public void startUpdatingThread() {
         Thread thread = new Thread(() -> {
-            boolean success = updateBaselineAndSegmentsFromServer();;
+            boolean success = updateBaselineAndSegmentsFromServer();
             while (!isDataUpdated(baselineMatrixAndSegments) || !success) {
                 try {
                     Thread.sleep(1000);
                     success = updateBaselineAndSegmentsFromServer();
+                } catch (InterruptedException ignored) { }
+            }
+            isAvailable.set(true);
+            logger.info("Поменян статус сервера: " + isAvailable.get());
+        });
+        thread.start();
+    }
+
+    public void startTryingToConnectToDatabase() {
+        Thread thread = new Thread(() -> {
+            while (!dataBaseIsAvailable()) {
+                try {
+                    Thread.sleep(1000);
                 } catch (InterruptedException ignored) { }
             }
             isAvailable.set(true);
@@ -94,5 +114,20 @@ public class UpdateBaselineAndSegmentsService {
             }
         }
         return true;
+    }
+
+    private final int maxDatabasePingInMillis = 200;
+    private final ExecutorService executor = Executors.newCachedThreadPool();
+    public boolean dataBaseIsAvailable() {
+        try {
+            Future<?> future = executor.submit(() -> {
+                jdbcTemplate.queryForObject("select 1", Integer.class);
+            });
+            future.get(maxDatabasePingInMillis, TimeUnit.MILLISECONDS);
+            return true;
+        } catch (Exception e) {
+            logger.error("Разорвано соединение с базой данных...");
+            return false;
+        }
     }
 }

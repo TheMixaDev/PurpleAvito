@@ -4,6 +4,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.bigbrainmm.avitopricesapi.dto.*;
+import org.bigbrainmm.avitopricesapi.service.UpdateBaselineAndSegmentsService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -11,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.*;
 
 import static org.bigbrainmm.avitopricesapi.StaticStorage.*;
 
@@ -20,7 +24,9 @@ import static org.bigbrainmm.avitopricesapi.StaticStorage.*;
 @Tag(name = "Получение цен!")
 public class PriceController {
 
+    private final UpdateBaselineAndSegmentsService updateBaselineAndSegmentsService;
     private final JdbcTemplate jdbcTemplate;
+    private final Logger logger = LoggerFactory.getLogger(PriceController.class);
 
     @Schema(description = "Запрос цены")
     @PostMapping(value = "/")
@@ -39,6 +45,13 @@ public class PriceController {
         // заполняем ответ
 
         if (!isAvailable.get()) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
+        }
+
+        if (!updateBaselineAndSegmentsService.dataBaseIsAvailable()) {
+            isAvailable.set(false);
+            logger.info("Поменян статус сервера: " + isAvailable.get());
+            updateBaselineAndSegmentsService.startTryingToConnectToDatabase();
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
         }
 

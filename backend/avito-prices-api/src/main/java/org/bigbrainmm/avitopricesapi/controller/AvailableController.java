@@ -20,9 +20,6 @@ import static org.bigbrainmm.avitopricesapi.StaticStorage.isAvailable;
 @RequestMapping("/api/available")
 @Tag(name = "Проверка доступности сервиса", description = "Доступность сервиса определяет то, может ли он сейчас выдать корректную цену или нет.")
 public class AvailableController {
-
-    private final UpdateBaselineAndSegmentsService updateBaselineAndSegmentsService;
-
     @GetMapping(value = "/", produces = "application/json")
     public ResponseEntity<MessageResponse> available() {
         if (isAvailable.get()) return ResponseEntity.status(HttpStatus.OK).body(new MessageResponse("Сервис доступен"));
