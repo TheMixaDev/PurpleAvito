@@ -72,6 +72,7 @@ services:
       - "8081:8081"
     depends_on:
       - avito_admin_api
+      - postgres_primary
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres_primary:5432/avito_db
       - SPRING_DATASOURCE_USERNAME=hulumulu
@@ -84,8 +85,9 @@ services:
     ports:
       - "8082:8082"
     depends_on:
-      - avito_prices_api_primary
+      - avito_admin_api
+      - postgres_replica_1
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres_primary:5432/avito_db
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres_replica_1:5433/avito_db
       - SPRING_DATASOURCE_USERNAME=hulumulu
       - SPRING_DATASOURCE_PASSWORD=Qwerty123
