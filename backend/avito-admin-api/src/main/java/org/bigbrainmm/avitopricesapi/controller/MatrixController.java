@@ -167,7 +167,9 @@ public class MatrixController {
 
     @PostMapping(value = "/setup", produces = "application/json")
     @Operation(summary = "Установить текущую стандартную матрицу по имени")
-    public ResponseEntity<MessageResponse> setup(@RequestBody SetupMatrixRequest request) {
+    public ResponseEntity<MessageResponse> setup(
+            @RequestBody SetupMatrixRequest request
+    ) {
         SourceBaseline sourceBaseline = sourceBaselineRepository.findByName(request.getName());
         if (sourceBaseline == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new MessageResponse("Матрица с именем " + request.getName() + " не найдена"));
@@ -180,7 +182,9 @@ public class MatrixController {
 
     @PostMapping(value = "/setup/segments", produces = "application/json")
     @Operation(summary = "Установить в дискаунт группах матрицы по id сгемента и name discount_table")
-    public ResponseEntity<MessageResponse> setupSegment(@RequestBody SetupDiscountSegmentsRequest request) {
+    public ResponseEntity<MessageResponse> setupSegment(
+            @RequestBody SetupDiscountSegmentsRequest request
+    ) {
         if (request.getDiscountSegments().isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new MessageResponse("Список сегментов пуст"));
         }
