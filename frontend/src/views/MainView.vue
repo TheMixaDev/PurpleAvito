@@ -1,11 +1,16 @@
 <script setup>
 import PriceServiceComponent from '@/components/PriceServiceComponent.vue';
+import UISetupButton from '@/components/ui/UISetupButton.vue';
 import { usePriveServersStore } from '@/stores/priceServers';
 import { VMap, VMapGoogleTileLayer, VMapZoomControl, VMapDivMarker } from 'vue-map-ui';
 </script>
 
 <template>
-    <h1 class="text-3xl font-semibold">Сервисы отдачи цен</h1>
+    <ul class="text-sm font-medium text-center text-gray-500 rounded-lg shadow sm:flex dark:divide-gray-700 dark:text-gray-400">
+        <UISetupButton :selected="true">
+            Сервисы отдачи цен
+        </UISetupButton>
+    </ul>
     <div>
         <VMap style="height: 300px" ref="map" theme="dark"
             :zoom="3"

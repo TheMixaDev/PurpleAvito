@@ -66,6 +66,16 @@ const PAGE = "flex items-center justify-center text-sm py-2 px-3 leading-tight t
                         {{ pagination.total }}
                     </span>
                 </span>
+                <span class="inline-flex items-stretch -space-x-px" v-if="pageSelectorEnabled">
+                    Страница:
+                    <input
+                        class="h-[25px] ml-2 w-[80px] rounded-lg"
+                        :value="pageSelector"
+                        type="number"
+                        @input="$emit('update:pageSelector', $event.target.value)"
+                        @blur="$emit('psProceed')"
+                        @keyup.enter="$emit('psProceed')">
+                </span>
                 <ul class="inline-flex items-stretch -space-x-px">
                     <li>
                         <a @click="changePage(pagination.page)" href="#" class="flex items-center justify-center h-full py-1.5 px-3 ml-0 text-gray-500 bg-white rounded-l-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
@@ -128,16 +138,21 @@ export default {
             type: Number,
             default: 0
         },
+        pageSelectorEnabled: {
+            type: Boolean,
+            default: false
+        },
         emptyText: {
             type: String,
             default: "Данные не найдены"
         },
         search: String,
+        pageSelector: String,
         empty: Boolean,
         isLoading: Boolean,
         pagination: Pagination
     },
-    emits: ['creationClick', 'pageChange', 'update:search', 'searchApply', 'clearClick'],
+    emits: ['creationClick', 'pageChange', 'update:search', 'searchApply', 'clearClick', 'update:pageSelector', 'psProceed'],
     computed: {
         /**
          * Generates an array of page numbers for pagination based on max page count and current page.

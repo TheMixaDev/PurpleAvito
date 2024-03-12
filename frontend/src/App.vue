@@ -73,7 +73,7 @@ import UILoading from './components/ui/UILoading.vue';
             <UISideButton title="Создание матрицы" to="/create">
               <AddIcon/>
             </UISideButton>
-            <UISideButton title="Просмотр матриц" to="/">
+            <UISideButton title="Просмотр матриц" to="/matrix">
               <PageIcon/>
             </UISideButton>
           </ul>

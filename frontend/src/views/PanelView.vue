@@ -28,15 +28,15 @@ import UILabeledCheckbox from '@/components/ui/UILabeledCheckbox.vue';
             <div class="mx-auto max-w-screen-xl p-3 px-4 lg:px-12">
                 <p class="mb-2 text-center">
                     Отсутствие родительской матрицы создает новую пустую скидочную матрицу.
-                    <UIButton class="ml-2" color="danger" @click="parentMatrix = 0" :disabled="!parentMatrix">
+                    <UIButton class="ml-2" color="danger" @click="NewMatrixStore.parentMatrix = 0" :disabled="!NewMatrixStore.parentMatrix">
                         Сбросить матрицу
                     </UIButton>
-                    <UIButton class="ml-2" color="secondary" @click="parentMatrix = SettingsStore.baseline">
+                    <UIButton class="ml-2" color="secondary" @click="NewMatrixStore.parentMatrix = SettingsStore.baseline">
                         Установить главную
                     </UIButton>
                 </p>
                 <UIDropdownWithSearch
-                    v-model="parentMatrix"
+                    v-model="NewMatrixStore.parentMatrix"
                     :options="SettingsStore.matrices"
                     >
                     Выберите родительскую матрицу
@@ -118,10 +118,10 @@ import UILabeledCheckbox from '@/components/ui/UILabeledCheckbox.vue';
                 </UIButton>
                 <UIButton color="secondary" class="mt-4 w-full z-0" :disabled="((NewMatrixStore.items.length < 1 || fileLoading) && originFile == null) || matrixPublishing" @click="createMatrix">
                     <font-awesome-icon :icon="['fas', 'plus']"/>
-                    {{ (parentMatrix != 0 ? `Клонировать` : `Создать`) }} матрицу ({{ (parentMatrix != 0 && SettingsStore.matrices[parentMatrix].startsWith("baseline") ? `Основная` : `Скидочная`) }})
+                    {{ (NewMatrixStore.parentMatrix != 0 ? `Клонировать` : `Создать`) }} матрицу ({{ (NewMatrixStore.parentMatrix != 0 && SettingsStore.matrices[NewMatrixStore.parentMatrix].startsWith("baseline") ? `Основная` : `Скидочная`) }})
                 </UIButton>
                 <p class="text-center mt-2 text-xl">
-                    {{ (parentMatrix != 0 ? `Измененных` : `Всего`) }}
+                    {{ (NewMatrixStore.parentMatrix != 0 ? `Измененных` : `Всего`) }}
                     <span v-if="originFile == null">
                         строк матрицы - {{ NewMatrixStore.items.length }}
                     </span>
@@ -162,8 +162,7 @@ export default {
             matrixPublishing: false,
             formingFile: false,
             originFile: null,
-
-            parentMatrix: 0,
+            
             percentLoading: 0,
             showReadable: true
         }
@@ -340,12 +339,12 @@ export default {
                 }
                 this.formingFile = false;
                 this.percentLoading = 0;
-                MatrixService.createMatrix(this.parentMatrix, file, data => {
+                MatrixService.createMatrix(NewMatrixStore.parentMatrix, file, data => {
                     this.$notify({type: 'success', text: data.message});
                     SettingsStore.dropUpdate();
                     SettingsStore.updateSettings(() => {
                         NewMatrixStore.clear();
-                        this.parentMatrix = data.matrixName;
+                        NewMatrixStore.parentMatrix = data.matrixName;
                         this.matrixPublishing = false;
                     }, () => {
                         this.$notify({type: 'error', text: 'Произошла ошибка при обновлении данных'});

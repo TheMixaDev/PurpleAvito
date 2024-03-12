@@ -5,6 +5,7 @@ import { MatrixItem } from '@/models/matrixItem';
 import { FrontendService } from '@/services/FrontendService';
 
 export const useNewMatrixStore = defineStore('newMatrix', () => {
+    const parentMatrix = ref(0);
     const items = ref([]);
     const pagination = ref(new Pagination(0, 10, 0));
     const display = ref([]);
@@ -83,6 +84,7 @@ export const useNewMatrixStore = defineStore('newMatrix', () => {
         pagination,
         search,
         display,
+        parentMatrix,
         updateSearch,
         applySearch,
         handleSegmentsPageChange,
