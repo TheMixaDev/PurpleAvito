@@ -88,14 +88,16 @@ public class MatrixController {
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{ \"message\": \"Неверное имя матрицы\" }");
         }
-        List<Integer> notCompletedRows = new ArrayList<>();
         SourceBaseline newSourceBaseline = null;
         DiscountBaseline newDiscountBaseline = null;
+        boolean completedSuccessfully = false;
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()));
             long lines = reader.lines().count();
             if(lines > 300000 && isDemo) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{ \"message\": \"Вы находитесь на демо-сервере. Демо-сервер не может обрабатывать большие файлы (более 300,000 строк) в связи с ограничением размера жесткого диска арендуемого сервера. Для включения этой возможности выставите DEMO_SERVER=false в параметрах окружения сервера админ-панели.\", \"showModal\": true }");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{ \"message\": \"Вы находитесь на демо-сервере. " +
+                        "Демо-сервер не может обрабатывать большие файлы (более 300,000 строк) в связи с ограничением размера жесткого диска арендуемого сервера. " +
+                        "Для включения этой возможности выставите DEMO_SERVER=false в параметрах окружения сервера админ-панели.\", \"showModal\": true }");
             }
             int counter = 0;
             if (name.equals("discount_matrix_new")) jdbcTemplate.update("create table " + newName + " (microcategory_id int, location_id int, price int);");
@@ -108,7 +110,6 @@ public class MatrixController {
                 newDiscountBaseline = new DiscountBaseline(newName, false);
                 discountBaselineRepository.save(newDiscountBaseline);
             }
-
             jdbcTemplate.update("ALTER TABLE " + newName + " ADD CONSTRAINT " + newName + "_pkey PRIMARY KEY (location_id, microcategory_id);");
             try {
                 // Заполнение данными
@@ -121,17 +122,13 @@ public class MatrixController {
                 while ((row = reader.readLine()) != null) {
                     counter++;
                     var slt = row.split(",");
-                    if (slt.length < 3) {
-                        notCompletedRows.add(counter);
-                        continue;
-                    }
-                    if (
+                    if (     slt.length < 3 ||
                             !((isNumeric(slt[0]) || slt[0].equals(nullLiteral)) &&
                             (isNumeric(slt[1]) || slt[1].equals(nullLiteral)) &&
                             (isNumeric(slt[2]) || slt[2].equals(nullLiteral)))
                     ) {
-                        notCompletedRows.add(counter);
-                        continue;
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{ \"message\": \"В строке номер " + counter + " обнаружена ошибка. " +
+                                "Данные не загружены. \", \"showModal\": true }");
                     }
                     query.append("(").append(slt[0]).append(", ").append(slt[1]).append(", ").append(slt[2]).append(")");
                     query.append(", ");
@@ -150,33 +147,39 @@ public class MatrixController {
                     query.append("ON CONFLICT (microcategory_id, location_id) DO UPDATE SET price = EXCLUDED.price;");
                     jdbcTemplate.update(query.toString());
                     System.out.println("Sent " + line + " rows to " + newName);
+                    completedSuccessfully = true;
                 }
             } catch (Exception e) {
                 e.printStackTrace();
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{ \"message\": \" Неверный формат тела запроса. \" }");
             } finally {
-                if (name.contains("baseline_matrix")) {
-                    newSourceBaseline.setReady(true);
-                    sourceBaselineRepository.save(newSourceBaseline);
-                } else if (name.contains("discount_matrix")) {
-                    newDiscountBaseline.setReady(true);
-                    discountBaselineRepository.save(newDiscountBaseline);
+                if (completedSuccessfully) {
+                    if (name.contains("baseline_matrix")) {
+                        newSourceBaseline.setReady(true);
+                        sourceBaselineRepository.save(newSourceBaseline);
+                    } else if (name.contains("discount_matrix")) {
+                        newDiscountBaseline.setReady(true);
+                        discountBaselineRepository.save(newDiscountBaseline);
+                    }
+                } else {
+                    // Cleanup
+                    jdbcTemplate.update("drop table " + newName);
+                    if (name.contains("baseline_matrix")) {
+                        assert newSourceBaseline != null;
+                        sourceBaselineRepository.delete(newSourceBaseline);
+                    } else if (name.contains("discount_matrix")) {
+                        assert newDiscountBaseline != null;
+                        discountBaselineRepository.delete(newDiscountBaseline);
+                    }
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{ \"message\": \" Неверный формат тела запроса. \" }");
-        }
-        if (!notCompletedRows.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.OK).body(
-                    "{ \"message\": \"Матрица склонирована, но не все строки были применены.\", " +
-                    "\"matrixName\": \"" + newName + "\", " +
-                    "\"errorValues\": \"Неверные значения в строках: " + notCompletedRows.stream().map(String::valueOf).collect(Collectors.joining(", ")) + "\" }");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{ \"message\": \" Неверный формат тела запроса.\" }");
         }
         return ResponseEntity.status(HttpStatus.OK).body(
                 "{ \"message\": \"Матрица " + newName + " склонирована успешно.\", " +
-                        "\"matrixName\": \"" + newName + "\", " +
-                        "\"errorValues\": null }");
+                        "\"matrixName\": \"" + newName + "\"}");
     }
 
     public static boolean isNumeric(String str) {
