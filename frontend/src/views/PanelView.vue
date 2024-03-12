@@ -16,6 +16,7 @@ import { useTreeStore } from '@/stores/tree';
 import { MatrixService } from '@/services/MatrixService';
 import UIProgressBar from '@/components/ui/UIProgressBar.vue';
 import UILabeledCheckbox from '@/components/ui/UILabeledCheckbox.vue';
+import { Loader } from '@/models/loader';
 </script>
 <template>
     <section>
@@ -136,7 +137,7 @@ import UILabeledCheckbox from '@/components/ui/UILabeledCheckbox.vue';
                         Формирование файла...
                     </span>
                     <span v-else>
-                        {{ percentLoading < 100 ? `Загрузка матрицы на сервер...` : `Обновление базы данных...` }}
+                        {{ !updatingDb ? `Загрузка матрицы на сервер...` : `Обновление базы данных...` }}
                     </span>
                 </UIProgressBar>
                 <UIProgressBar
@@ -164,7 +165,8 @@ export default {
             originFile: null,
             
             percentLoading: 0,
-            showReadable: true
+            showReadable: true,
+            updatingDb: false
         }
     },
     computed: {
@@ -331,6 +333,7 @@ export default {
             this.percentLoading = 0;
             this.matrixPublishing = true;
             this.formingFile = true;
+            this.updatingDb = false;
             setTimeout((async () => {
                 let file = this.originFile;
                 if(file == null) {
@@ -339,23 +342,45 @@ export default {
                 }
                 this.formingFile = false;
                 this.percentLoading = 0;
+
+                let loader = new Loader(data => {
+                    if(data.type == 'success') {
+                        data = data.data;
+                        this.$notify({type: 'success', text: data.message});
+                        SettingsStore.dropUpdate();
+                        SettingsStore.updateSettings(() => {
+                            NewMatrixStore.clear();
+                            NewMatrixStore.parentMatrix = data.matrixName;
+                            this.updatingDb = false;
+                            this.matrixPublishing = false;
+                        }, () => {
+                            this.$notify({type: 'error', text: 'Произошла ошибка при обновлении данных'});
+                            this.updatingDb = false;
+                            this.matrixPublishing = false;
+                        });
+                    } else if(data.type == 'error') {
+                        let error = data.data;
+                        if(error.response.data && error.response.data.showModal)
+                            FrontendService.showWarningModal(error.response.data.message);
+                        this.$notify({type: 'error', text: 'Произошла ошибка при создании матрицы'});
+                        this.updatingDb = false;
+                        this.matrixPublishing = false;
+                    }
+                }, percent => {
+                    this.percentLoading = Math.round(percent * 10) / 10
+                }, 0.001 * file.size);
                 MatrixService.createMatrix(NewMatrixStore.parentMatrix, file, data => {
-                    this.$notify({type: 'success', text: data.message});
-                    SettingsStore.dropUpdate();
-                    SettingsStore.updateSettings(() => {
-                        NewMatrixStore.clear();
-                        NewMatrixStore.parentMatrix = data.matrixName;
-                        this.matrixPublishing = false;
-                    }, () => {
-                        this.$notify({type: 'error', text: 'Произошла ошибка при обновлении данных'});
-                        this.matrixPublishing = false;
-                    });
+                    loader.end({type: 'success', data: data});
                 }, error => {
-                    if(error.response.data && error.response.data.showModal)
-                        FrontendService.showWarningModal(error.response.data.message);
-                    this.$notify({type: 'error', text: 'Произошла ошибка при создании матрицы'});
-                    this.matrixPublishing = false;
-                }, event => this.percentLoading = Math.round((event.loaded * 1000) / event.total) / 10)
+                    loader.end({type: 'error', data: error});
+                }, event => {
+                    this.percentLoading = Math.round((event.loaded * 1000) / event.total) / 10
+                    if(this.percentLoading > 99) {
+                        this.updatingDb = true;
+                        this.percentLoading = 0;
+                        loader.start();
+                    }
+                });
             }), 0);
         },
         clear() {
