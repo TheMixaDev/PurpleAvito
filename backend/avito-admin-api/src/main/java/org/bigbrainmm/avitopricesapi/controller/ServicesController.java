@@ -18,6 +18,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.netty.http.client.HttpClient;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -38,13 +39,7 @@ public class ServicesController {
     private String names;
     @Value("${AVITO_PRICES_SERVICES_COORDS}")
     private String coords;
-    static WebClient webClient = WebClient.builder()
-            .clientConnector(new ReactorClientHttpConnector(
-                            HttpClient.create()
-                                    .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, statusTimeout)
-                    )
-            )
-            .build();
+    static WebClient webClient = WebClient.create();
     @GetMapping(produces = "application/json")
     @Operation(summary = "Посмотреть статус сервисов отдачи цен")
     public AllPriceServicesResponse getServices() {
@@ -94,7 +89,8 @@ public class ServicesController {
                     .uri(url + "/api/available/")
                     .retrieve();
             ping = System.currentTimeMillis() - start;
-            HttpStatusCode statusCode = Objects.requireNonNull(responseSpec.toBodilessEntity().block()).getStatusCode();
+            HttpStatusCode statusCode = Objects.requireNonNull(responseSpec.toBodilessEntity()
+                    .timeout(Duration.ofMillis(200)).block()).getStatusCode();
             actual = statusCode == HttpStatusCode.valueOf(200);
         } catch (WebClientResponseException e) {
             if (e.getStatusCode() != HttpStatusCode.valueOf(503))

@@ -19,6 +19,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 
+import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -39,6 +41,7 @@ public class SOCDelegatorService {
     private List<String> socUrls;
 
     static WebClient webClient = WebClient.create();
+
     @PostConstruct
     public void init() {
         socUrls = List.of(servicesUrl.split(","));
@@ -46,19 +49,16 @@ public class SOCDelegatorService {
     }
 
     public void sendCurrentBaselineAndSegmentsToSOCs() {
-        WebClient webClient = WebClient.create();
         String[] urls = socUrls.stream().map(url -> url + "/api/matrices/setup/baseline_segments").toArray(String[]::new);
-
-        Flux.fromArray(urls)
-                .flatMap(url ->
-                        webClient.post()
-                        .uri(url)
-                        .body(BodyInserters.fromValue(baselineMatrixAndSegments))
-                        .retrieve()
-                        .bodyToMono(String.class)
-                        .onErrorResume(error -> Mono.empty())
-                        .doOnNext(response -> logger.info("Response from " + url + ": " + response))
-                ).subscribe();
+        Arrays.stream(urls).forEach(url -> {
+            webClient.post()
+                    .uri(url)
+                    .bodyValue(baselineMatrixAndSegments)
+                    .retrieve()
+                    .bodyToMono(BaselineMatrixAndSegments.class)
+                    .onErrorResume(e -> Mono.empty())
+                    .subscribe();
+        });
     }
 
     public String isAllDelegatorsReadyMessage(BaselineMatrixAndSegments baselineMatrixAndSegments) {
@@ -112,9 +112,10 @@ public class SOCDelegatorService {
             WebClient.ResponseSpec responseSpec = webClient
                     .post()
                     .uri(url + "/is_baseline_segments_updated")
-                    .body(BodyInserters.fromValue(baselineMatrixAndSegments))
+                    .bodyValue(baselineMatrixAndSegments)
                     .retrieve();
-            HttpStatusCode statusCode = Objects.requireNonNull(responseSpec.toBodilessEntity().block()).getStatusCode();
+            HttpStatusCode statusCode = Objects.requireNonNull(responseSpec.toBodilessEntity()
+                    .timeout(Duration.ofMillis(200)).block()).getStatusCode();
             actual = statusCode == HttpStatusCode.valueOf(200);
         } catch (WebClientResponseException e) {
             if (e.getStatusCode() != HttpStatusCode.valueOf(404))
