@@ -38,7 +38,7 @@ services:
     command: |
       bash -c "
       rm -rf /var/lib/postgresql/data/*
-      until pg_basebackup --progress --pgdata=/var/lib/postgresql/data -R --slot=replication_slot1 --host=postgres-primary --port=5432
+      until pg_basebackup --progress --pgdata=/var/lib/postgresql/data -R --slot=replication_slot1 --host=postgres-primary --port=5432 --checkpoint=fast
       do
       echo 'Waiting for primary to connect...'
       sleep 1s
@@ -66,7 +66,7 @@ services:
     command: |
       bash -c "
       rm -rf /var/lib/postgresql/data/*
-      until pg_basebackup --progress --pgdata=/var/lib/postgresql/data -R --slot=replication_slot2 --host=postgres-primary --port=5432
+      until pg_basebackup --progress --pgdata=/var/lib/postgresql/data -R --slot=replication_slot2 --host=postgres-primary --port=5432 --checkpoint=fast
       do
       echo 'Waiting for primary to connect...'
       sleep 1s
@@ -122,7 +122,7 @@ services:
       - MAX_DATABASE_PING_IN_MILLIS=50
       - SPRING_DATASOURCE_USERNAME=hulumulu
       - SPRING_DATASOURCE_PASSWORD=Qwerty123
-      - SELF_URL=http://avito-prices-api-primary:8081
+      - SELF_URL=http://avito-prices-api-replica-1:8082
       - AVITO_PRICES_SERVICES_URLS=http://avito-prices-api-primary:8081,http://avito-prices-api-replica-1:8082,http://avito-prices-api-replica-2:8083
       - LOCATION=6
 
@@ -139,7 +139,7 @@ services:
       - MAX_DATABASE_PING_IN_MILLIS=50
       - SPRING_DATASOURCE_USERNAME=hulumulu
       - SPRING_DATASOURCE_PASSWORD=Qwerty123
-      - SELF_URL=http://avito-prices-api-primary:8081
+      - SELF_URL=http://avito-prices-api-replica-2:8083
       - AVITO_PRICES_SERVICES_URLS=http://avito-prices-api-primary:8081,http://avito-prices-api-replica-1:8082,http://avito-prices-api-replica-2:8083
       - LOCATION=12
   

@@ -1,5 +1,7 @@
 package org.bigbrainmm.avitopricesapi.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +13,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.*;
@@ -26,6 +32,7 @@ public class PriceController {
 
     private final UpdateBaselineAndSegmentsService updateBaselineAndSegmentsService;
     private final JdbcTemplate jdbcTemplate;
+    private final RestTemplate restTemplate;
     private final Logger logger = LoggerFactory.getLogger(PriceController.class);
 
     @Schema(description = "Запрос цены")
@@ -44,15 +51,15 @@ public class PriceController {
             // price = findPrice(base)
         // заполняем ответ
 
-        if (!isAvailable.get()) {
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
-        }
-
-        if (!updateBaselineAndSegmentsService.dataBaseIsAvailable()) {
-            isAvailable.set(false);
-            logger.info("Поменян статус сервера: " + isAvailable.get());
-            updateBaselineAndSegmentsService.startTryingToConnectToDatabase();
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
+        boolean dbAvailable = updateBaselineAndSegmentsService.dataBaseIsAvailable();
+        if (!isAvailable.get() || !dbAvailable) {
+            if (!dbAvailable) updateBaselineAndSegmentsService.startTryingToConnectToDatabase();
+            logger.info("Выполнен запрос на цену, но сервер недоступен, пытаюсь получить данные с другого СОЦ...");
+            ResponseEntity<PriceResponse> responseEntity = tryGetPriceFromAnotherSOCs(priceRequest);
+            if (!responseEntity.getStatusCode().equals(HttpStatus.SERVICE_UNAVAILABLE)) {
+                logger.info("Выполнен успешный редирект на другой СОЦ");
+            }
+            return responseEntity;
         }
 
         TreeNode microCategory = microCategoryRoot.getById(priceRequest.getMicroCategoryId());
@@ -131,6 +138,41 @@ public class PriceController {
     private String getMatrixNameBySegment(Long segmentId) {
         return baselineMatrixAndSegments.getDiscountSegments().stream().filter(
                 x -> Objects.equals(x.getId(), segmentId)).findFirst().map(DiscountSegment::getName).orElse(null);
+    }
+
+    private ResponseEntity<PriceResponse> tryGetPriceFromAnotherSOCs(PriceRequest priceRequest) {
+        List<String> urls = Arrays.stream(updateBaselineAndSegmentsService.getServicesUrl().split(","))
+                .filter(url -> !url.equals(updateBaselineAndSegmentsService.getSelfUrl())).toList();
+        for (String url : urls) {
+            ResponseEntity<String> response = null;
+            boolean err;
+            try {
+                logger.info("Проверка статуса СОЦ: " + url);
+                response = restTemplate.getForEntity(url + "/api/available/", String.class);
+                err = false;
+            } catch (Exception e) { err = true; }
+            if (response != null && response.getStatusCode().equals(HttpStatus.OK) && !err) {
+                String redirectUrl = url + "/price";
+                ResponseEntity<PriceResponse> responseEntity = null;
+                try {
+                    logger.info("Статус OK, Запрос на СОЦ: " + redirectUrl);
+                    responseEntity = restTemplate.postForEntity(redirectUrl, priceRequest, PriceResponse.class);
+                } catch (HttpClientErrorException e) {
+                    if (e.getRawStatusCode() == 400) {
+                        ObjectMapper mapper = new ObjectMapper();
+                        MessageResponse messageResponse = null;
+                        try {
+                            messageResponse = mapper.readValue(e.getResponseBodyAsString(), MessageResponse.class);
+                            throw new InvalidDataException(messageResponse.getMessage());
+                        } catch (JsonProcessingException jpe) {
+                            throw new InvalidDataException("Message is not parsed");
+                        }
+                    }
+                }
+                if (responseEntity != null) return responseEntity;
+            }
+        }
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
     }
 
     @ExceptionHandler(InvalidDataException.class)
