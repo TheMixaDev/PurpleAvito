@@ -87,7 +87,7 @@ services:
       - SPRING_DATASOURCE_USERNAME=hulumulu
       - SPRING_DATASOURCE_PASSWORD=Qwerty123
       - AVITO_PRICES_SERVICES_URLS=http://avito-prices-api-primary:8081,http://avito-prices-api-replica-1:8082,http://avito-prices-api-replica-2:8083
-      - AVITO_PRICES_SERVICES_NAMES=Основной,Москва,Санкт-Петебрург
+      - AVITO_PRICES_SERVICES_NAMES=Екатеринбург,Москва,Санкт-Петебрург
       - AVITO_PRICES_SERVICES_COORDS=56.838011,60.597474|55.791116,37.466952|59.886541,30.329361
       - DEMO_SERVER=true
       - AVITO_PRICES_API_STATUS_TIMEOUT=500 # Increase if servers are VERY far away apart from each other
