@@ -38,7 +38,7 @@ services:
     command: |
       bash -c "
       rm -rf /var/lib/postgresql/data/*
-      until pg_basebackup --pgdata=/var/lib/postgresql/data -R --slot=replication_slot1 --host=postgres-primary --port=5432
+      until pg_basebackup --progress --pgdata=/var/lib/postgresql/data -R --slot=replication_slot1 --host=postgres-primary --port=5432
       do
       echo 'Waiting for primary to connect...'
       sleep 1s
@@ -68,7 +68,7 @@ services:
     command: |
       bash -c "
       rm -rf /var/lib/postgresql/data/*
-      until pg_basebackup --pgdata=/var/lib/postgresql/data -R --slot=replication_slot2 --host=postgres-primary --port=5432
+      until pg_basebackup --progress --pgdata=/var/lib/postgresql/data -R --slot=replication_slot2 --host=postgres-primary --port=5432
       do
       echo 'Waiting for primary to connect...'
       sleep 1s
