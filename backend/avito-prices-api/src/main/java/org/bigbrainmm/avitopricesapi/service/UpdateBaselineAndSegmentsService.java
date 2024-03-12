@@ -17,6 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.sql.SQLOutput;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -30,6 +32,10 @@ import static org.bigbrainmm.avitopricesapi.StaticStorage.*;
 public class UpdateBaselineAndSegmentsService {
     @Value("${AVITO_ADMIN_API_URL}")
     private String adminServerUrl;
+    @Value("${SELF_URL}")
+    private String selfUrl;
+    @Value("${AVITO_PRICES_SERVICES_URLS}")
+    private String servicesUrl;
     @Value("${MAX_DATABASE_PING_IN_MILLIS}")
     private int maxDatabasePingInMillis;
 
@@ -60,15 +66,23 @@ public class UpdateBaselineAndSegmentsService {
 
     public void startUpdatingThread() {
         Thread thread = new Thread(() -> {
+            int counter = 0, maxAttempts = 3;
             boolean success = updateBaselineAndSegmentsFromServer();
             while (!isDataUpdated(baselineMatrixAndSegments) || !success) {
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(400);
+                    counter++;
                     success = updateBaselineAndSegmentsFromServer();
+                    if (counter >= maxAttempts) {
+                        startTryingToUpdateBaselineAndSegmentsFromAnotherSOCs();
+                        break;
+                    }
                 } catch (InterruptedException ignored) { }
             }
-            isAvailable.set(true);
-            logger.info("Поменян статус сервера: " + isAvailable.get());
+            if (counter < maxAttempts) {
+                isAvailable.set(true);
+                logger.info("Поменян статус сервера: " + isAvailable.get());
+            }
         });
         thread.start();
     }
@@ -90,13 +104,45 @@ public class UpdateBaselineAndSegmentsService {
     public boolean updateBaselineAndSegmentsFromServer() {
         try {
             baselineMatrixAndSegments = restTemplate.getForEntity(url, BaselineMatrixAndSegments.class).getBody();
-            lastUpdate = System.currentTimeMillis();
+            assert baselineMatrixAndSegments != null;
+            baselineMatrixAndSegments.setLastUpdate(System.currentTimeMillis());
             StaticStorage.saveBaselineAndSegments(baselineMatrixAndSegments);
             logger.info("baselineMatrixAndSegments обновлён");
             return true;
         } catch (Exception e) {
             logger.error("Не удалось обновить baselineMatrixAndSegments: " + e.getMessage());
             return false;
+        }
+    }
+
+    public void startTryingToUpdateBaselineAndSegmentsFromAnotherSOCs() {
+        try {
+            List<BaselineMatrixAndSegments> bs = new ArrayList<>();
+            Arrays.stream(servicesUrl.split(",")).filter(s -> !s.isEmpty() && !s.equals(selfUrl)).forEach(s -> {
+                try {
+                    BaselineMatrixAndSegments b = restTemplate.getForEntity(s + "/api/matrices/setup", BaselineMatrixAndSegments.class).getBody();
+                    bs.add(b);
+                } catch (Exception e) {
+                    logger.error("Не удалось получить baselineMatrixAndSegments c СОЦ: " + s + " " + e.getMessage());
+                }
+            });
+            long maxLastUpdate = -1;
+            for (BaselineMatrixAndSegments b : bs) {
+                if (b.getLastUpdate() > maxLastUpdate) {
+                    maxLastUpdate = b.getLastUpdate();
+                    baselineMatrixAndSegments = b;
+                }
+            }
+            if (maxLastUpdate == -1) {
+                throw new Exception();
+            }
+            logger.info("baselineMatrixAndSegments обновлён с другого СОЦа c lastUpdate: " + maxLastUpdate);
+            isAvailable.set(true);
+            logger.info("Поменян статус сервера: " + isAvailable.get());
+        } catch (Exception e) {
+            logger.error("Не удалось обновить baselineMatrixAndSegments из других СОЦ'ов: " + e.getMessage());
+            logger.error("Поехали опять искать на главном серверере....");
+            startUpdatingThread();
         }
     }
 

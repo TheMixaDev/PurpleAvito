@@ -34,17 +34,20 @@ public class StaticStorage {
             InputStreamReader isr = new InputStreamReader(new FileSystemResource("baseline_and_segments.json").getInputStream());
             ObjectMapper mapper = new ObjectMapper();
             StaticStorage.baselineMatrixAndSegments = mapper.readValue(isr, BaselineMatrixAndSegments.class);
+            baselineMatrixAndSegments.setLastUpdate(System.currentTimeMillis());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static void saveBaselineAndSegments(BaselineMatrixAndSegments baselineMatrixAndSegments) {
+    public static void saveBaselineAndSegments(BaselineMatrixAndSegments bms) {
         try {
             ObjectMapper mapper = new ObjectMapper();
             Resource resource = new FileSystemResource("baseline_and_segments.json");
             File file = new File(String.valueOf(resource.getFile()));
-            mapper.writeValue(file, baselineMatrixAndSegments);
+            mapper.writeValue(file, bms);
+            bms.setLastUpdate(System.currentTimeMillis());
+            StaticStorage.baselineMatrixAndSegments = bms;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

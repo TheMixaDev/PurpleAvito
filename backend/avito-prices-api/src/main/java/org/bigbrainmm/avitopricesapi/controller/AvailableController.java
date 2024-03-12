@@ -1,12 +1,8 @@
 package org.bigbrainmm.avitopricesapi.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.bigbrainmm.avitopricesapi.dto.MessageResponse;
-import org.bigbrainmm.avitopricesapi.service.UpdateBaselineAndSegmentsService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,6 +19,6 @@ public class AvailableController {
     @GetMapping(value = "/", produces = "application/json")
     public ResponseEntity<MessageResponse> available() {
         if (isAvailable.get()) return ResponseEntity.status(HttpStatus.OK).body(new MessageResponse("Сервис доступен"));
-        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(new MessageResponse("Сервис недоступен "));
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(new MessageResponse("Сервис недоступен"));
     }
 }

@@ -10,7 +10,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Schema(description = "Сообщение об ошибке")
+@Schema(description = "Сообщение")
 public class MessageResponse {
     @Schema(description = "Текст сообщения", example = "Любая информация в ответе запроса")
     private String message;

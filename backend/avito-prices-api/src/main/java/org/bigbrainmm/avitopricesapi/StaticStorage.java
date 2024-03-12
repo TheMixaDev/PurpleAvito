@@ -19,7 +19,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Service
 public class StaticStorage {
     public static AtomicBoolean isAvailable = new AtomicBoolean(false);
-    public static Long lastUpdate = 0L;
     public static TreeNode microCategoryRoot;
     public static TreeNode locationsRoot;
     public static BaselineMatrixAndSegments baselineMatrixAndSegments;
@@ -46,12 +45,14 @@ public class StaticStorage {
         }
     }
 
-    public static void saveBaselineAndSegments(BaselineMatrixAndSegments baselineMatrixAndSegments) {
+    public static void saveBaselineAndSegments(BaselineMatrixAndSegments bms) {
         try {
             ObjectMapper mapper = new ObjectMapper();
             Resource resource = new FileSystemResource("baseline_and_segments.json");
             File file = new File(String.valueOf(resource.getFile()));
-            mapper.writeValue(file, baselineMatrixAndSegments);
+            mapper.writeValue(file, bms);
+            bms.setLastUpdate(System.currentTimeMillis());
+            StaticStorage.baselineMatrixAndSegments = bms;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

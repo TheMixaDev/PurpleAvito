@@ -18,4 +18,6 @@ public class BaselineMatrixAndSegments {
     Matrix baselineMatrix;
     @Schema(description = "Скидочные сегменты")
     List<DiscountSegment> discountSegments;
+    @Schema(description = "Timestamp последнего обновления baseline или скидочных сегментов", example = "1751234123")
+    Long lastUpdate;
 }

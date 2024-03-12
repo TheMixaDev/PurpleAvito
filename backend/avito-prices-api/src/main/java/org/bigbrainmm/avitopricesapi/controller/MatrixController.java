@@ -38,10 +38,7 @@ public class MatrixController {
     @GetMapping(value = "/setup", produces = "application/json")
     @Operation(summary = "Посмотреть текущую стандартную матрицу и список скидочных матриц")
     public BaselineMatrixAndSegments setup() {
-        BaselineMatrixAndSegments setupMatrixRequest = new BaselineMatrixAndSegments();
-        setupMatrixRequest.setBaselineMatrix(baselineMatrixAndSegments.getBaselineMatrix());
-        setupMatrixRequest.setDiscountSegments(baselineMatrixAndSegments.getDiscountSegments());
-        return setupMatrixRequest;
+        return baselineMatrixAndSegments;
     }
 
     @PostMapping(value = "/setup/baseline", produces = "application/json")
