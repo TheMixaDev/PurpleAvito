@@ -154,7 +154,7 @@ export default {
                 MatrixService.setBaseline(SettingsStore.baseline, () => {
                     this.forceUpdate();
                     this.$notify({type: 'success', text: 'Главная ценовая матрица обновлена'});
-                }, () => this.$notify({type: 'error', text: 'Произошла ошибка при обновлении главной ценовой матрицы'}));
+                }, error => this.$notify({type: 'error', text: error.response.data.message}));
             })
         },
         registerChangeMain() {
