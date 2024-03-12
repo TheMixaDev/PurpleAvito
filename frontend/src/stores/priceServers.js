@@ -14,7 +14,9 @@ export const usePriveServersStore = defineStore('priceServers', () => {
                 servers.value[i.url] = {
                     ping: i.ping,
                     status: i.connected ? (i.actual ? `actual` : `available`) : `failed`,
-                    updated: Date.now()
+                    updated: Date.now(),
+                    name: i.name,
+                    coords: [i.coordinates.lat, i.coordinates.lon]
                 }
             }
         })

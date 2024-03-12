@@ -9,7 +9,7 @@ import { FrontendService } from '@/services/FrontendService';
     <div class="max-w-sm bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 inline-flex m-4">
         <div class="p-5">
             <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-                Сервис отдачи цен
+                {{ name }}
             </h5>
             <p class="mb-1 font-normal text-gray-700 dark:text-gray-400">
                 Адрес: <span class="font-semibold text-blue-600 dark:text-blue-500">{{ url.replace("http://", "").replace("https://", "") }}</span><br>
