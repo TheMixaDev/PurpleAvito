@@ -52,7 +52,7 @@ public class MatrixController {
 
     @GetMapping(value = "/{matrix_name}", produces = "application/json")
     @Operation(summary = "Получить строки матрицы по имени с использованием указанных параметров offset и limit для пагинации")
-    public ResponseEntity<List<Map<String, Object>>> getMatrixRows(
+    public ResponseEntity<MatrixContent> getMatrixRows(
             @PathVariable("matrix_name") String name,
             @RequestParam(value = "offset", required = true) int offset,
             @RequestParam(value = "limit", required = true) int limit
@@ -60,8 +60,10 @@ public class MatrixController {
         if (sourceBaselineRepository.findByName(name) == null)
             throw new InvalidDataException("Матрицы с таким именем не существует");
         String sql = "SELECT * FROM " + name + " OFFSET ? LIMIT ?";
-        List<Map<String, Object>> result = jdbcTemplate.queryForList(sql, offset, limit);
-        return ResponseEntity.status(HttpStatus.OK).body(result);
+        String countQuery = "SELECT COUNT(*) FROM " + name;
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql, offset, limit);
+        int total = jdbcTemplate.queryForObject(countQuery, Integer.class);
+        return ResponseEntity.status(HttpStatus.OK).body(new MatrixContent(rows, total));
     }
 
     @PostMapping(value = "/{matrix_name}", produces = "application/json", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
