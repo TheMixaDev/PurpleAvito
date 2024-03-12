@@ -2,7 +2,7 @@
 import PriceServiceComponent from '@/components/PriceServiceComponent.vue';
 import UISetupButton from '@/components/ui/UISetupButton.vue';
 import { usePriveServersStore } from '@/stores/priceServers';
-import { VMap, VMapGoogleTileLayer, VMapZoomControl, VMapDivMarker } from 'vue-map-ui';
+import { VMap, VMapArcGisAeroTileLayer, VMapZoomControl, VMapDivMarker, VMapGoogleTileLayer } from 'vue-map-ui';
 </script>
 
 <template>
@@ -18,7 +18,8 @@ import { VMap, VMapGoogleTileLayer, VMapZoomControl, VMapDivMarker } from 'vue-m
             :center="[61.060230, 84.826744]"
             class="z-0 rounded-lg mt-2"
             v-if="!selected_station">
-            <VMapGoogleTileLayer />
+            <VMapGoogleTileLayer :opacity="1" />
+            <VMapArcGisAeroTileLayer :opacity="0.35" />
             <VMapZoomControl />
             <VMapDivMarker
                 v-for="(value, key) in PriceServersStore.servers"
