@@ -57,7 +57,7 @@ public class MatrixController {
             @RequestParam(value = "offset", required = true) int offset,
             @RequestParam(value = "limit", required = true) int limit
     ) {
-        if (sourceBaselineRepository.findByName(name) == null)
+        if (sourceBaselineRepository.findByName(name) == null && discountBaselineRepository.findByName(name) == null)
             throw new InvalidDataException("Матрицы с таким именем не существует");
         String sql = "SELECT * FROM " + name + " OFFSET ? LIMIT ?";
         String countQuery = "SELECT COUNT(*) FROM " + name;
