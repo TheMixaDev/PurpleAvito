@@ -82,5 +82,12 @@ export const FrontendService = {
     },
     async updateUI() {
         await new Promise(resolve => setTimeout(resolve, 0));
+    },
+    msToTime(timestamp) {
+        const currentDate = new Date(timestamp);
+        const hours = currentDate.getHours().toString().padStart(2, '0');
+        const minutes = currentDate.getMinutes().toString().padStart(2, '0');
+        const seconds = currentDate.getSeconds().toString().padStart(2, '0');
+        return `${hours}:${minutes}:${seconds}`;
     }
 }

@@ -96,12 +96,14 @@ import UILoading from './components/ui/UILoading.vue';
 
 <script>
 import { useSettingsStore } from '@/stores/settings';
+import { usePriveServersStore } from './stores/priceServers';
 
 export default {
     name: "App",
     data() {
       return {
         SettingsStore: null,
+        PriceServersStore: null
       }
     },
     methods: {
@@ -111,10 +113,12 @@ export default {
               () => this.$notify({type: 'success', text: 'Данные обновлены'}),
               () => this.$notify({type: 'error', text: 'Произошла ошибка при обновлении данных'})
             );
+            this.PriceServersStore.get();
         }
     },
     mounted() {
         this.SettingsStore = useSettingsStore();
+        this.PriceServersStore = usePriveServersStore();
     }
 }
 </script>
