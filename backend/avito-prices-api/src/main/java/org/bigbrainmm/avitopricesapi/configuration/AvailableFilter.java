@@ -1,7 +1,6 @@
 package org.bigbrainmm.avitopricesapi.configuration;
 
 import jakarta.servlet.*;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.bigbrainmm.avitopricesapi.StaticStorage;
 import org.springframework.core.annotation.Order;
@@ -11,7 +10,7 @@ import java.io.IOException;
 
 @Component
 @Order(1)
-public class fififif implements Filter {
+public class AvailableFilter implements Filter {
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -21,6 +20,7 @@ public class fififif implements Filter {
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         if(!StaticStorage.isAvailable.get()) {
+            System.exit(0);
             HttpServletResponse hsr = (HttpServletResponse) servletResponse;
             hsr.setStatus(503);
             hsr.setHeader("X-Powered-By", "Express");
