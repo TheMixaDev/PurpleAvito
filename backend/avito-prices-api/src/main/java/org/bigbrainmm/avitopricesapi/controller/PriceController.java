@@ -20,7 +20,7 @@ import static org.bigbrainmm.avitopricesapi.StaticStorage.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/price")
+@RequestMapping("/")
 @Tag(name = "Получение цен!")
 public class PriceController {
 
@@ -29,7 +29,7 @@ public class PriceController {
     private final Logger logger = LoggerFactory.getLogger(PriceController.class);
 
     @Schema(description = "Запрос цены")
-    @PostMapping(value = "/")
+    @PostMapping(value = "/price")
     public ResponseEntity<PriceResponse> getPrice(@RequestBody PriceRequest priceRequest) {
         // Описание алгоритма
 
@@ -121,6 +121,11 @@ public class PriceController {
             return findPrice(initialMicrocategory, initialMicrocategory, parentNodeLoc, tableName);
         }
         return null;
+    }
+
+    @PostMapping(value="/is_baseline_segments_updated", produces = "application/json")
+    public ResponseEntity<Boolean> isBaselineMatrixUpdated(@RequestBody BaselineMatrixAndSegments bms) {
+        return updateBaselineAndSegmentsService.isDataUpdated(bms) ? ResponseEntity.ok(true) : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
     private String getMatrixNameBySegment(Long segmentId) {
