@@ -151,8 +151,9 @@ public class UpdateBaselineAndSegmentsService {
             logger.info("Поменян статус сервера: " + isAvailable.get());
         } catch (Exception e) {
             logger.error("Не удалось обновить baselineMatrixAndSegments из других СОЦ'ов: " + e.getMessage());
-            logger.error("Поехали опять искать на главном серверере....");
-            startUpdatingThread();
+            logger.info("Теперь я супермен, все упали и я единственный отвечаю за отдачу цен");
+            isAvailable.set(true);
+            logger.info("Поменян статус сервера: " + isAvailable.get());
         }
     }
 
