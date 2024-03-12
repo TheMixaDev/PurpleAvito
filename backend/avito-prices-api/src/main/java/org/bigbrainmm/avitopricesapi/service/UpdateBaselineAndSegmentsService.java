@@ -1,6 +1,7 @@
 package org.bigbrainmm.avitopricesapi.service;
 
 import jakarta.annotation.PostConstruct;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.bigbrainmm.avitopricesapi.StaticStorage;
 import org.bigbrainmm.avitopricesapi.dto.BaselineMatrixAndSegments;
@@ -29,6 +30,7 @@ import static org.bigbrainmm.avitopricesapi.StaticStorage.*;
 
 @Service
 @RequiredArgsConstructor
+@Getter
 public class UpdateBaselineAndSegmentsService {
     @Value("${AVITO_ADMIN_API_URL}")
     private String adminServerUrl;
@@ -64,7 +66,9 @@ public class UpdateBaselineAndSegmentsService {
     }
 
 
+    private boolean startUpdatingThreadStarted = false;
     public void startUpdatingThread() {
+        if (startUpdatingThreadStarted) return;
         Thread thread = new Thread(() -> {
             int counter = 0, maxAttempts = 3;
             boolean success = updateBaselineAndSegmentsFromServer();
@@ -83,11 +87,15 @@ public class UpdateBaselineAndSegmentsService {
                 isAvailable.set(true);
                 logger.info("Поменян статус сервера: " + isAvailable.get());
             }
+            startUpdatingThreadStarted = false;
         });
         thread.start();
+        startUpdatingThreadStarted = true;
     }
 
+    private boolean tryingToConnectToDatabaseStarted = false;
     public void startTryingToConnectToDatabase() {
+        if (tryingToConnectToDatabaseStarted) return;
         Thread thread = new Thread(() -> {
             while (!dataBaseIsAvailable()) {
                 try {
@@ -97,8 +105,10 @@ public class UpdateBaselineAndSegmentsService {
             logger.info("Соединение с базой данных восстановлено");
             isAvailable.set(true);
             logger.info("Поменян статус сервера: " + isAvailable.get());
+            tryingToConnectToDatabaseStarted = false;
         });
         thread.start();
+        tryingToConnectToDatabaseStarted = true;
     }
 
     public boolean updateBaselineAndSegmentsFromServer() {
@@ -141,8 +151,9 @@ public class UpdateBaselineAndSegmentsService {
             logger.info("Поменян статус сервера: " + isAvailable.get());
         } catch (Exception e) {
             logger.error("Не удалось обновить baselineMatrixAndSegments из других СОЦ'ов: " + e.getMessage());
-            logger.error("Поехали опять искать на главном серверере....");
-            startUpdatingThread();
+            logger.info("Теперь я супермен, все упали и я единственный отвечаю за отдачу цен");
+            isAvailable.set(true);
+            logger.info("Поменян статус сервера: " + isAvailable.get());
         }
     }
 
@@ -174,6 +185,8 @@ public class UpdateBaselineAndSegmentsService {
             future.get(maxDatabasePingInMillis, TimeUnit.MILLISECONDS);
             return true;
         } catch (Exception e) {
+            isAvailable.set(false);
+            logger.info("Поменян статус сервера: " + isAvailable.get());
             logger.error("Разорвано соединение с базой данных...");
             return false;
         }

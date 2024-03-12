@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.bigbrainmm.avitopricesapi.dto.AllPriceServicesResponse;
+import org.bigbrainmm.avitopricesapi.dto.Coordinates;
 import org.bigbrainmm.avitopricesapi.dto.PriceService;
 import org.bigbrainmm.avitopricesapi.service.SOCDelegatorService;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,6 +24,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @RequiredArgsConstructor
 @RequestMapping("/api/services")
@@ -32,6 +34,10 @@ public class ServicesController {
     @Value("${AVITO_PRICES_API_STATUS_TIMEOUT}")
     private static int statusTimeout;
     private final SOCDelegatorService socDelegatorService;
+    @Value("${AVITO_PRICES_SERVICES_NAMES}")
+    private String names;
+    @Value("${AVITO_PRICES_SERVICES_COORDS}")
+    private String coords;
     static WebClient webClient = WebClient.builder()
             .clientConnector(new ReactorClientHttpConnector(
                             HttpClient.create()
@@ -43,10 +49,13 @@ public class ServicesController {
     @Operation(summary = "Посмотреть статус сервисов отдачи цен")
     public AllPriceServicesResponse getServices() {
         List<String> urls = socDelegatorService.getSocUrls();
+        List<Integer> indexes = IntStream.rangeClosed(0, urls.size() - 1)
+                .boxed()
+                .toList();
         ExecutorService executor = Executors.newFixedThreadPool(urls.size());
 
-        List<CompletableFuture<PriceService>> futures = urls.stream()
-                .map(url -> CompletableFuture.supplyAsync(() -> checkPriceService(url), executor))
+        List<CompletableFuture<PriceService>> futures = indexes.stream()
+                .map(index -> CompletableFuture.supplyAsync(() -> checkPriceService(index), executor))
                 .toList();
 
         CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
@@ -66,11 +75,18 @@ public class ServicesController {
         return new AllPriceServicesResponse(priceServices);
     }
 
-    private static PriceService checkPriceService(String url) {
+    private PriceService checkPriceService(int index) {
+        List<String> urls = socDelegatorService.getSocUrls();
         boolean connected = true;
         boolean actual = false;
         long ping = 999;
-
+        String url = urls.get(index);
+        String name = names.split(",")[index];
+        String coordsString = coords.split("\\|")[index];
+        Coordinates coordinates = new Coordinates(
+            Double.parseDouble(coordsString.split(",")[0]),
+            Double.parseDouble(coordsString.split(",")[1])
+        );
         try {
             long start = System.currentTimeMillis();
             WebClient.ResponseSpec responseSpec = webClient
@@ -87,6 +103,6 @@ public class ServicesController {
             connected = false;
         }
 
-        return new PriceService(url, connected, actual, ping);
+        return new PriceService(url, connected, actual, ping, name, coordinates);
     }
 }

@@ -20,4 +20,8 @@ public class PriceService {
     private boolean actual;
     @Schema(description = "Время запроса к сервису", example = "5")
     private long ping;
+    @Schema(description = "Имя сервиса", example = "Москва")
+    private String name;
+    @Schema(description = "Кооридаты")
+    private Coordinates coordinates;
 }
