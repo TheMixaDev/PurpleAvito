@@ -7,8 +7,10 @@ import org.bigbrainmm.avitopricesapi.StaticStorage;
 import org.bigbrainmm.avitopricesapi.dto.*;
 import org.bigbrainmm.avitopricesapi.entity.DiscountBaseline;
 import org.bigbrainmm.avitopricesapi.dto.DiscountSegment;
+import org.bigbrainmm.avitopricesapi.entity.History;
 import org.bigbrainmm.avitopricesapi.entity.SourceBaseline;
 import org.bigbrainmm.avitopricesapi.repository.DiscountBaselineRepository;
+import org.bigbrainmm.avitopricesapi.repository.HistoryRepository;
 import org.bigbrainmm.avitopricesapi.repository.SourceBaselineRepository;
 import org.bigbrainmm.avitopricesapi.service.SOCDelegatorService;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,6 +36,7 @@ public class MatrixController {
 
     private final DiscountBaselineRepository discountBaselineRepository;
     private final SourceBaselineRepository sourceBaselineRepository;
+    private final HistoryRepository historyRepository;
     private final SOCDelegatorService socDelegatorService;
     private final JdbcTemplate jdbcTemplate;
 
@@ -228,6 +231,7 @@ public class MatrixController {
         }
         // Сохранение изменений
         StaticStorage.saveBaselineAndSegments(baselineMatrixAndSegments);
+        historyRepository.save(new History(sourceBaseline.getName(), System.currentTimeMillis()));
         socDelegatorService.sendCurrentBaselineAndSegmentsToSOCs();
         return ResponseEntity.ok(new MessageResponse("Матрица " + request.getName() + " установлена"));
     }
@@ -250,11 +254,12 @@ public class MatrixController {
             if (pair.getName() != null) {
                 if (!pair.getName().equals("null")) {
                     if (discountBaseline == null) return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                            .body(new MessageResponse("Матрица с именем \" + pair.getDiscountMatrixName() + \" не найдена"));
+                            .body(new MessageResponse("Матрица с именем " + pair.getName() + " не найдена"));
                 }
             }
         }
 
+        List<History> changes = new ArrayList<>();
         List<DiscountSegment> copy = new ArrayList<>();
         for (var ds : baselineMatrixAndSegments.getDiscountSegments()) copy.add(new DiscountSegment(ds.getId(), ds.getName()));
 
@@ -263,6 +268,7 @@ public class MatrixController {
             if (pair.getName() == null) ds.setName(null);
             else if (pair.getName().equals("null")) ds.setName(null);
             else ds.setName(pair.getName());
+            changes.add(new History(ds.getName(), ds.getId(), System.currentTimeMillis()));
         }
         // Проверка уникальности
         for (var pair : request.getDiscountSegments()) {
@@ -280,8 +286,9 @@ public class MatrixController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new MessageResponse(error));
         }
         StaticStorage.saveBaselineAndSegments(baselineMatrixAndSegments);
+        historyRepository.saveAll(changes);
         socDelegatorService.sendCurrentBaselineAndSegmentsToSOCs();
-        return new ResponseEntity<>(HttpStatus.OK);
+        return ResponseEntity.ok(new MessageResponse("Изменения выполнены успешно"));
     }
 
     @ExceptionHandler(InvalidDataException.class)
