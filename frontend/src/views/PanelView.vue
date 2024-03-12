@@ -174,6 +174,9 @@ export default {
         },
         SettingsStore() {
             return SettingsStore
+        },
+        TreeStore() {
+            return TreeStore
         }
     },
     methods: {

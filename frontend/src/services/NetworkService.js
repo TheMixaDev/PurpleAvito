@@ -24,6 +24,18 @@ export const NetworkService = {
                 success(response);
         })();
     },
+    RootRequest(method, url, data, success, fail, contentType = "application/json") {
+        (async () => {
+            let response = await axios({
+                method: method,
+                url: `${configuration.rootUrl}${url}`,
+                data: data,
+                headers: {'Content-Type': contentType}
+            }).catch(fail);
+            if(response)
+                success(response);
+        })();
+    },
     ClassicFileRequest(url, file, success, fail, uploadProgress) {
         const formData = new FormData();
         formData.append('file', file);

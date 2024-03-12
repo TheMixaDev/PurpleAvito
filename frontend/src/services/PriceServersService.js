@@ -8,7 +8,7 @@ export const PriceServersService = {
         }, fail);
     },
     getPrice: (locationId, microCategoryId, userId, success, fail) => {
-        NetworkService.ClassicRequest("POST", `price`,
+        NetworkService.RootRequest("POST", `price`,
             {locationId, microCategoryId, userId}, response => {
             success(response.data);
         }, fail);
