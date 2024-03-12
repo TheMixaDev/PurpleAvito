@@ -45,7 +45,6 @@ public class PriceController {
         // заполняем ответ
 
         if (!isAvailable.get()) {
-            System.exit(0);
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
         }
 
@@ -53,7 +52,6 @@ public class PriceController {
             isAvailable.set(false);
             logger.info("Поменян статус сервера: " + isAvailable.get());
             updateBaselineAndSegmentsService.startTryingToConnectToDatabase();
-            System.exit(0);
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
         }
 

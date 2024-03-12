@@ -2,15 +2,21 @@ package org.bigbrainmm.avitopricesapi.configuration;
 
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.bigbrainmm.avitopricesapi.StaticStorage;
+import org.bigbrainmm.avitopricesapi.service.UpdateBaselineAndSegmentsService;
 import org.springframework.core.annotation.Order;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
+@RequiredArgsConstructor
 @Component
 @Order(1)
 public class AvailableFilter implements Filter {
+
+    private final UpdateBaselineAndSegmentsService updateBaselineAndSegmentsService;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -19,7 +25,7 @@ public class AvailableFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
-        if(!StaticStorage.isAvailable.get()) {
+        if(!StaticStorage.isAvailable.get() || !updateBaselineAndSegmentsService.dataBaseIsAvailable()) {
             System.exit(0);
             HttpServletResponse hsr = (HttpServletResponse) servletResponse;
             hsr.setStatus(503);
