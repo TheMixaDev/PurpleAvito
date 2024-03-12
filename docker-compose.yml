@@ -47,8 +47,6 @@ services:
       chmod 0700 /var/lib/postgresql/data
       postgres -p 5433
       "
-    depends_on:
-      - avito-admin-api
 
   postgres-replica-2:
     image: postgres:14-alpine
@@ -77,8 +75,6 @@ services:
       chmod 0700 /var/lib/postgresql/data
       postgres -p 5434
       "
-    depends_on:
-      - avito-admin-api
 
   avito-admin-api:
     container_name: avito-admin-api
@@ -86,8 +82,6 @@ services:
     restart: always
     ports:
       - "8080:8080"
-    depends_on:
-      - postgres-primary
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-primary:5432/avito_db
       - SPRING_DATASOURCE_USERNAME=hulumulu
@@ -104,9 +98,6 @@ services:
     restart: always
     ports:
       - "8081:8081"
-    depends_on:
-      - avito-admin-api
-      - postgres-primary
     environment:
       - JAVA_TOOL_OPTIONS=-Dserver.port=8081
       - AVITO_ADMIN_API_URL=http://avito-admin-api:8080
@@ -124,9 +115,6 @@ services:
     restart: always
     ports:
       - "8082:8082"
-    depends_on:
-      - avito-admin-api
-      - postgres-replica-1
     environment:
       - JAVA_TOOL_OPTIONS=-Dserver.port=8082
       - AVITO_ADMIN_API_URL=http://avito-admin-api:8080
@@ -144,9 +132,6 @@ services:
     restart: always
     ports:
       - "8083:8083"
-    depends_on:
-      - avito-admin-api
-      - postgres-replica-2
     environment:
       - JAVA_TOOL_OPTIONS=-Dserver.port=8083
       - AVITO_ADMIN_API_URL=http://avito-admin-api:8080
@@ -164,5 +149,4 @@ services:
     restart: always
     ports:
       - '80:80'
-    depends_on:
-      - avito-admin-api
+
