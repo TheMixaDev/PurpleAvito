@@ -2,15 +2,14 @@ docker rmi -f purpleavitoback-avito-admin-api
 docker rmi -f purpleavitoback-avito-prices-api-primary
 docker rmi -f purpleavitoback-avito-prices-api-replica-1
 docker rmi -f purpleavitoback-avito-prices-api-replica-2
-docker-compose up --build
 
 docker-compose up postgres-primary -d
 docker-compose up avito-admin-api -d
 
 timeout 10
 
-docker-compose restart postgres-primary -d
-docker-compose restart avito-admin-api -d
+docker-compose restart postgres-primary
+docker-compose restart avito-admin-api
 
 timeout 10
 
