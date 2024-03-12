@@ -100,7 +100,7 @@ public class MatrixController {
             if(lines > 300000 && isDemo) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{ \"message\": \"Вы находитесь на демо-сервере. " +
                         "Демо-сервер не может обрабатывать большие файлы (более 300,000 строк) в связи с ограничением размера жесткого диска арендуемого сервера. " +
-                        "Для включения этой возможности выставите DEMO_SERVER=false в параметрах окружения сервера админ-панели.\", \"showModal\": true }");
+                        "Для включения этой возможности выставите DEMO_SERVER=false в переменных окружения сервера админ-панели.\", \"showModal\": true }");
             }
             int counter = 0;
             if (name.equals("discount_matrix_new")) jdbcTemplate.update("create table " + newName + " (microcategory_id int, location_id int, price int);");
