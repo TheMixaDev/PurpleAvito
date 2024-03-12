@@ -63,7 +63,7 @@ public class SOCDelegatorService {
 
     public String isAllDelegatorsReadyMessage(BaselineMatrixAndSegments baselineMatrixAndSegments) {
         Tuple<Integer, Integer> result = isAllDelegatorsReady(baselineMatrixAndSegments);
-        if(result.getFirst().intValue() != result.getSecond().intValue())
+        if(result.getFirst().intValue() != result.getSecond().intValue() || result.getSecond().intValue() == 0)
             return "Не все скидочные сервисы готовы к обновлению матрицы, готово " + result.getSecond() + " из " + result.getFirst();
         return null;
     }
