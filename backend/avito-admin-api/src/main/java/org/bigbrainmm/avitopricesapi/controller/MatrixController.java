@@ -50,6 +50,20 @@ public class MatrixController {
         return allMatrixRequest;
     }
 
+    @GetMapping(value = "/{matrix_name}", produces = "application/json")
+    @Operation(summary = "Получить строки матрицы по имени с использованием указанных параметров offset и limit для пагинации")
+    public ResponseEntity<List<Map<String, Object>>> getMatrixRows(
+            @PathVariable("matrix_name") String name,
+            @RequestParam(value = "offset", required = true) int offset,
+            @RequestParam(value = "limit", required = true) int limit
+    ) {
+        if (sourceBaselineRepository.findByName(name) == null)
+            throw new InvalidDataException("Матрицы с таким именем не существует");
+        String sql = "SELECT * FROM " + name + " OFFSET ? LIMIT ?";
+        List<Map<String, Object>> result = jdbcTemplate.queryForList(sql, offset, limit);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
     @PostMapping(value = "/{matrix_name}", produces = "application/json", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Установить изменения в матрице из CSV файла. discount_matrix_new - создает новую чистую матрицу. data - если пуст, то отправит ошибку.")
     public ResponseEntity<String> setChangesInMatrix(
@@ -263,5 +277,18 @@ public class MatrixController {
         StaticStorage.saveBaselineAndSegments(baselineMatrixAndSegments);
         socDelegatorService.sendCurrentBaselineAndSegmentsToSOCs();
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @ExceptionHandler(InvalidDataException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public MessageResponse error(InvalidDataException ex) {
+        return new MessageResponse(ex.getMessage());
+    }
+
+
+    public static class InvalidDataException extends RuntimeException {
+        public InvalidDataException(String message) {
+            super(message);
+        }
     }
 }
