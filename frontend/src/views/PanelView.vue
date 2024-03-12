@@ -12,8 +12,11 @@ import UILabeledInput from '@/components/ui/UILabeledInput.vue';
 import UISetupButton from '@/components/ui/UISetupButton.vue';
 import { useSettingsStore } from '@/stores/settings';
 import { useNewMatrixStore } from '@/stores/newMatrix';
+import { useTreeStore } from '@/stores/tree';
 import { MatrixService } from '@/services/MatrixService';
 import UIProgressBar from '@/components/ui/UIProgressBar.vue';
+import UILabeledCheckbox from '@/components/ui/UILabeledCheckbox.vue';
+import { Loader } from '@/models/loader';
 </script>
 <template>
     <section>
@@ -26,19 +29,22 @@ import UIProgressBar from '@/components/ui/UIProgressBar.vue';
             <div class="mx-auto max-w-screen-xl p-3 px-4 lg:px-12">
                 <p class="mb-2 text-center">
                     Отсутствие родительской матрицы создает новую пустую скидочную матрицу.
-                    <UIButton class="ml-2" color="danger" @click="parentMatrix = 0" :disabled="!parentMatrix">
+                    <UIButton class="ml-2" color="danger" @click="NewMatrixStore.parentMatrix = 0" :disabled="!NewMatrixStore.parentMatrix">
                         Сбросить матрицу
                     </UIButton>
-                    <UIButton class="ml-2" color="secondary" @click="parentMatrix = SettingsStore.baseline">
+                    <UIButton class="ml-2" color="secondary" @click="NewMatrixStore.parentMatrix = SettingsStore.baseline">
                         Установить главную
                     </UIButton>
                 </p>
                 <UIDropdownWithSearch
-                    v-model="parentMatrix"
+                    v-model="NewMatrixStore.parentMatrix"
                     :options="SettingsStore.matrices"
                     >
                     Выберите родительскую матрицу
                 </UIDropdownWithSearch>
+                <UILabeledCheckbox class="mt-2" v-model="showReadable">
+                    Отображать названия категорий и локаций
+                </UILabeledCheckbox>
             </div>
             <TableComponent
                 @searchApply="NewMatrixStore.applySearch"
@@ -52,21 +58,40 @@ import UIProgressBar from '@/components/ui/UIProgressBar.vue';
                 :creationEnabled="originFile == null"
                 @pageChange="NewMatrixStore.handleSegmentsPageChange"
                 :loadCount="NewMatrixStore.pagination.itemsPerPage"
-                :columns="['ID категории', 'ID локации', 'Цена', 'Действие']"
+                :columns="[showReadable ? 'Категория' : 'ID категории', showReadable ? 'Локация' : 'ID локации', 'Цена', 'Действие']"
                 :emptyText="originFile != null ? 'Предпросмотр недоступен' : 'Данные не найдены'"
                 >
                 <UITableRow v-for="(item, index) in NewMatrixStore.display" :key="index"
-                    :class="!item.microcategory_id || item.microcategory_id.length < 1 || item.microcategory_id == '0' ||
-                            !item.location_id || item.location_id.length < 1 || item.location_id == '0' ? `bg-danger-200` : ``">
+                    :class="!FrontendService.valueParser(item.microcategory_id)
+                            || FrontendService.valueParser(item.microcategory_id) < TreeStore.minMicrocategory
+                            || FrontendService.valueParser(item.microcategory_id) > TreeStore.maxMicrocategory
+                            || !FrontendService.valueParser(item.location_id)
+                            || FrontendService.valueParser(item.location_id) < TreeStore.minLocation
+                            || FrontendService.valueParser(item.location_id) > TreeStore.maxLocation
+                            ? `bg-danger-200` : ``">
                     <UITableCell>
+                        <UIDropdownWithSearch
+                            :options="TreeStore.microcategories"
+                            v-model="item.microcategory_id"
+                            v-if="showReadable">
+                            Не выбрано
+                        </UIDropdownWithSearch>
                         <UILabeledInput
+                            v-else
                             v-model="item.microcategory_id"
                             type="number"
                             :disabled="matrixPublishing"
                             />
                     </UITableCell>
                     <UITableCell>
+                        <UIDropdownWithSearch
+                            :options="TreeStore.locations"
+                            v-model="item.location_id"
+                            v-if="showReadable">
+                            Не выбрано
+                        </UIDropdownWithSearch>
                         <UILabeledInput
+                            v-else
                             v-model="item.location_id"
                             type="number"
                             :disabled="matrixPublishing"
@@ -94,10 +119,10 @@ import UIProgressBar from '@/components/ui/UIProgressBar.vue';
                 </UIButton>
                 <UIButton color="secondary" class="mt-4 w-full z-0" :disabled="((NewMatrixStore.items.length < 1 || fileLoading) && originFile == null) || matrixPublishing" @click="createMatrix">
                     <font-awesome-icon :icon="['fas', 'plus']"/>
-                    {{ (parentMatrix != 0 ? `Клонировать` : `Создать`) }} матрицу ({{ (parentMatrix != 0 && SettingsStore.matrices[parentMatrix].startsWith("baseline") ? `Основная` : `Скидочная`) }})
+                    {{ (NewMatrixStore.parentMatrix != 0 ? `Клонировать` : `Создать`) }} матрицу ({{ (NewMatrixStore.parentMatrix != 0 && SettingsStore.matrices[NewMatrixStore.parentMatrix].startsWith("baseline") ? `Основная` : `Скидочная`) }})
                 </UIButton>
                 <p class="text-center mt-2 text-xl">
-                    {{ (parentMatrix != 0 ? `Измененных` : `Всего`) }}
+                    {{ (NewMatrixStore.parentMatrix != 0 ? `Измененных` : `Всего`) }}
                     <span v-if="originFile == null">
                         строк матрицы - {{ NewMatrixStore.items.length }}
                     </span>
@@ -112,7 +137,7 @@ import UIProgressBar from '@/components/ui/UIProgressBar.vue';
                         Формирование файла...
                     </span>
                     <span v-else>
-                        {{ percentLoading < 100 ? `Загрузка матрицы на сервер...` : `Обновление базы данных...` }}
+                        {{ !updatingDb ? `Загрузка матрицы на сервер...` : `Обновление базы данных...` }}
                     </span>
                 </UIProgressBar>
                 <UIProgressBar
@@ -129,6 +154,7 @@ import UIProgressBar from '@/components/ui/UIProgressBar.vue';
 const regex = /\(\s*(\d+),\s*(\d+),\s*(\d+|null)\s*\)|(\d+),\s*(\d+),\s*(\d+|null)/;
 const SettingsStore = useSettingsStore();
 const NewMatrixStore = useNewMatrixStore();
+const TreeStore = useTreeStore();
 export default {
     name: "PanelView",
     data() {
@@ -137,9 +163,10 @@ export default {
             matrixPublishing: false,
             formingFile: false,
             originFile: null,
-
-            parentMatrix: 0,
-            percentLoading: 0
+            
+            percentLoading: 0,
+            showReadable: true,
+            updatingDb: false
         }
     },
     computed: {
@@ -148,6 +175,9 @@ export default {
         },
         SettingsStore() {
             return SettingsStore
+        },
+        TreeStore() {
+            return TreeStore
         }
     },
     methods: {
@@ -303,6 +333,7 @@ export default {
             this.percentLoading = 0;
             this.matrixPublishing = true;
             this.formingFile = true;
+            this.updatingDb = false;
             setTimeout((async () => {
                 let file = this.originFile;
                 if(file == null) {
@@ -311,23 +342,45 @@ export default {
                 }
                 this.formingFile = false;
                 this.percentLoading = 0;
-                MatrixService.createMatrix(this.parentMatrix, file, data => {
-                    this.$notify({type: 'success', text: data.message});
-                    SettingsStore.dropUpdate();
-                    SettingsStore.updateSettings(() => {
-                        NewMatrixStore.clear();
-                        this.parentMatrix = data.matrixName;
+
+                let loader = new Loader(data => {
+                    if(data.type == 'success') {
+                        data = data.data;
+                        this.$notify({type: 'success', text: data.message});
+                        SettingsStore.dropUpdate();
+                        SettingsStore.updateSettings(() => {
+                            NewMatrixStore.clear();
+                            NewMatrixStore.parentMatrix = data.matrixName;
+                            this.updatingDb = false;
+                            this.matrixPublishing = false;
+                        }, () => {
+                            this.$notify({type: 'error', text: 'Произошла ошибка при обновлении данных'});
+                            this.updatingDb = false;
+                            this.matrixPublishing = false;
+                        });
+                    } else if(data.type == 'error') {
+                        let error = data.data;
+                        if(error.response.data && error.response.data.showModal)
+                            FrontendService.showWarningModal(error.response.data.message);
+                        this.$notify({type: 'error', text: 'Произошла ошибка при создании матрицы'});
+                        this.updatingDb = false;
                         this.matrixPublishing = false;
-                    }, () => {
-                        this.$notify({type: 'error', text: 'Произошла ошибка при обновлении данных'});
-                        this.matrixPublishing = false;
-                    });
+                    }
+                }, percent => {
+                    this.percentLoading = Math.round(percent * 10) / 10
+                }, 0.001 * file.size);
+                MatrixService.createMatrix(NewMatrixStore.parentMatrix, file, data => {
+                    loader.end({type: 'success', data: data});
                 }, error => {
-                    if(error.response.data && error.response.data.showModal)
-                        FrontendService.showWarningModal(error.response.data.message);
-                    this.$notify({type: 'error', text: 'Произошла ошибка при создании матрицы'});
-                    this.matrixPublishing = false;
-                }, event => this.percentLoading = Math.round((event.loaded * 1000) / event.total) / 10)
+                    loader.end({type: 'error', data: error});
+                }, event => {
+                    this.percentLoading = Math.round((event.loaded * 1000) / event.total) / 10
+                    if(this.percentLoading > 99) {
+                        this.updatingDb = true;
+                        this.percentLoading = 0;
+                        loader.start();
+                    }
+                });
             }), 0);
         },
         clear() {

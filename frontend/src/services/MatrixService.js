@@ -40,5 +40,13 @@ export const MatrixService = {
         NetworkService.ClassicFileRequest(`matrices/${parent}`, file, response => {
             success(response.data);
         }, fail, uploadProgress);
+    },
+    getMatrixItems: (name, offset, limit, success, fail) => {
+        NetworkService.ClassicRequest("GET",
+            `matrices/${name}?offset=${offset}&limit=${limit}`,
+            null, response => {
+                success(response.data);
+            }, fail
+        )
     }
 }

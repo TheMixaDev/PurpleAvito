@@ -7,4 +7,10 @@ export const PriceServersService = {
             success(response.data);
         }, fail);
     },
+    getPrice: (locationId, microCategoryId, userId, success, fail) => {
+        NetworkService.RootRequest("POST", `price`,
+            {locationId, microCategoryId, userId}, response => {
+            success(response.data);
+        }, fail);
+    }
 }

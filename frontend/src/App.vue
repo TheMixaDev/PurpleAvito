@@ -5,6 +5,7 @@ import PieIcon from './assets/icons/sidepanel/PieIcon.vue';
 import PageIcon from './assets/icons/sidepanel/PageIcon.vue';
 import AddIcon from './assets/icons/sidepanel/AddIcon.vue';
 import LockIcon from './assets/icons/sidepanel/LockIcon.vue';
+import DocumentIcon from './assets/icons/sidepanel/DocumentIcon.vue';
 import UISideButton from './components/ui/UISideButton.vue';
 import UIButton from './components/ui/UIButton.vue';
 import { ModalsContainer } from 'vue-final-modal';
@@ -73,8 +74,11 @@ import UILoading from './components/ui/UILoading.vue';
             <UISideButton title="Создание матрицы" to="/create">
               <AddIcon/>
             </UISideButton>
-            <UISideButton title="Просмотр матриц" to="/">
+            <UISideButton title="Просмотр матриц" to="/matrix">
               <PageIcon/>
+            </UISideButton>
+            <UISideButton title="История изменений" to="/history">
+              <DocumentIcon/>
             </UISideButton>
           </ul>
         </div>
@@ -97,13 +101,17 @@ import UILoading from './components/ui/UILoading.vue';
 <script>
 import { useSettingsStore } from '@/stores/settings';
 import { usePriveServersStore } from './stores/priceServers';
+import { useTreeStore } from './stores/tree';
+import { useHistoryStore } from './stores/historyStore';
 
 export default {
     name: "App",
     data() {
       return {
         SettingsStore: null,
-        PriceServersStore: null
+        PriceServersStore: null,
+        TreeStore: null,
+        HistoryStore: null
       }
     },
     methods: {
@@ -114,11 +122,17 @@ export default {
               () => this.$notify({type: 'error', text: 'Произошла ошибка при обновлении данных'})
             );
             this.PriceServersStore.get();
+            this.HistoryStore.updateItems();
         }
     },
     mounted() {
         this.SettingsStore = useSettingsStore();
         this.PriceServersStore = usePriveServersStore();
+        this.TreeStore = useTreeStore();
+        this.HistoryStore = useHistoryStore();
+        this.TreeStore.get();
+        this.PriceServersStore.get();
+        this.HistoryStore.updateItems();
     }
 }
 </script>

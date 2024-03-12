@@ -4,7 +4,7 @@ const BASE_CLASS = `inline-block w-full p-4 bg-white border-r border-gray-200 da
 </script>
 <template>
     <li class="w-full focus-within:z-10">
-        <a href="#" :class="selected ? SELECTED_CLASS : BASE_CLASS" aria-current="page">
+        <a href="#" :class="[selected ? SELECTED_CLASS : BASE_CLASS, 'text-xl']" aria-current="page">
             <slot></slot>
         </a>
     </li>

@@ -11,6 +11,10 @@ import router from './router'
 import VueCookies from 'vue-cookies'
 import Notifications from '@kyvg/vue3-notification'
 
+import 'leaflet/dist/leaflet.css';
+import 'vue-map-ui/dist/style.css';
+import 'vue-map-ui/dist/theme-all.css';
+
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import { library } from "@fortawesome/fontawesome-svg-core";
 import { faTrash, faPlus, faDownload, faPencil, faEye, faBolt, faCopy, faTriangleExclamation, faBan, faStop, faBuilding } from "@fortawesome/free-solid-svg-icons";
