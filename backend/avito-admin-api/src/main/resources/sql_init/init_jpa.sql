@@ -1,5 +1,5 @@
-insert into source_baseline (name) values ('baseline_matrix_1'), ('baseline_matrix_2'), ('baseline_matrix_3');
-insert into discount_baseline (name) values ('discount_matrix_1'), ('discount_matrix_2'), ('discount_matrix_3');
+insert into source_baseline (name, ready) values ('baseline_matrix_1', true), ('baseline_matrix_2', true), ('baseline_matrix_3', true);
+insert into discount_baseline (name, ready) values ('discount_matrix_1', true), ('discount_matrix_2', true), ('discount_matrix_3', true);
 
 /* insert into current_baseline_matrix (id, name) values (1, 'baseline_matrix_1'); */
 

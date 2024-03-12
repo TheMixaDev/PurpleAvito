@@ -17,8 +17,11 @@ public class SourceBaseline {
     private Long id;
     @Column(name = "name")
     private String name;
+    @Column(name="ready")
+    private Boolean ready;
 
-    public SourceBaseline(String name) {
+    public SourceBaseline(String name, Boolean ready) {
         this.name = name;
+        this.ready = ready;
     }
 }

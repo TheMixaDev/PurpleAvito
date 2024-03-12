@@ -9,6 +9,7 @@ import java.util.List;
 
 @Repository
 public interface SourceBaselineRepository extends JpaRepository<SourceBaseline, Long> {
+    @Query("select s from source_baseline s where s.name = ?1 and s.ready = true")
     SourceBaseline findByName(String name);
     SourceBaseline findFirstByOrderByNameDesc();
     @Query("select max(id) from source_baseline")

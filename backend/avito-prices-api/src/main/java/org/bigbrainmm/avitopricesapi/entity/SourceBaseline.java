@@ -17,6 +17,8 @@ public class SourceBaseline {
     private Long id;
     @Column(name = "name")
     private String name;
+    @Column(name="ready")
+    private Boolean ready;
 
     public SourceBaseline(String name) {
         this.name = name;

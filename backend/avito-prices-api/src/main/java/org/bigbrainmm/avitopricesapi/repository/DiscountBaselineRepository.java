@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface DiscountBaselineRepository extends JpaRepository<DiscountBaseline, Long> {
+    @Query("select s from discount_baseline s where s.name = ?1 and s.ready = true")
     DiscountBaseline findByName(String name);
     DiscountBaseline findFirstByOrderByNameDesc();
     @Query("select max(id) from discount_baseline")

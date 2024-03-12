@@ -73,6 +73,8 @@ public class MatrixController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{ \"message\": \"Неверное имя матрицы\" }");
         }
         List<Integer> notCompletedRows = new ArrayList<>();
+        SourceBaseline newSourceBaseline = null;
+        DiscountBaseline newDiscountBaseline = null;
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()));
             long lines = reader.lines().count();
@@ -82,6 +84,15 @@ public class MatrixController {
             int counter = 0;
             if (name.equals("discount_matrix_new")) jdbcTemplate.update("create table " + newName + " (microcategory_id int, location_id int, price int);");
             else jdbcTemplate.update("create table " + newName + " as select * from " + name);
+
+            if (name.contains("baseline_matrix")) {
+                newSourceBaseline = new SourceBaseline(newName, false);
+                sourceBaselineRepository.save(newSourceBaseline);
+            } else if (name.contains("discount_matrix")) {
+                newDiscountBaseline = new DiscountBaseline(newName, false);
+                discountBaselineRepository.save(newDiscountBaseline);
+            }
+
             jdbcTemplate.update("ALTER TABLE " + newName + " ADD CONSTRAINT " + newName + "_pkey PRIMARY KEY (location_id, microcategory_id);");
             try {
                 // Заполнение данными
@@ -100,8 +111,8 @@ public class MatrixController {
                     }
                     if (
                             !((isNumeric(slt[0]) || slt[0].equals(nullLiteral)) &&
-                                    (isNumeric(slt[1]) || slt[1].equals(nullLiteral)) &&
-                                    (isNumeric(slt[2]) || slt[2].equals(nullLiteral)))
+                            (isNumeric(slt[1]) || slt[1].equals(nullLiteral)) &&
+                            (isNumeric(slt[2]) || slt[2].equals(nullLiteral)))
                     ) {
                         notCompletedRows.add(counter);
                         continue;
@@ -129,9 +140,11 @@ public class MatrixController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{ \"message\": \" Неверный формат тела запроса. \" }");
             } finally {
                 if (name.contains("baseline_matrix")) {
-                    sourceBaselineRepository.save(new SourceBaseline(newName));
+                    newSourceBaseline.setReady(true);
+                    sourceBaselineRepository.save(newSourceBaseline);
                 } else if (name.contains("discount_matrix")) {
-                    discountBaselineRepository.save(new DiscountBaseline(newName));
+                    newDiscountBaseline.setReady(true);
+                    discountBaselineRepository.save(newDiscountBaseline);
                 }
             }
         } catch (Exception e) {

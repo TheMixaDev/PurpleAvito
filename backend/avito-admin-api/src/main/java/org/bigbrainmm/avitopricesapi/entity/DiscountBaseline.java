@@ -17,8 +17,11 @@ public class DiscountBaseline {
     private Long id;
     @Column(name = "name")
     private String name;
+    @Column(name="ready")
+    private Boolean ready;
 
-    public DiscountBaseline(String name) {
+    public DiscountBaseline(String name, Boolean ready) {
         this.name = name;
+        this.ready = ready;
     }
 }
