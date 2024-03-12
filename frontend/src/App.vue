@@ -97,13 +97,15 @@ import UILoading from './components/ui/UILoading.vue';
 <script>
 import { useSettingsStore } from '@/stores/settings';
 import { usePriveServersStore } from './stores/priceServers';
+import { useTreeStore } from './stores/tree';
 
 export default {
     name: "App",
     data() {
       return {
         SettingsStore: null,
-        PriceServersStore: null
+        PriceServersStore: null,
+        TreeStore: null
       }
     },
     methods: {
@@ -119,6 +121,8 @@ export default {
     mounted() {
         this.SettingsStore = useSettingsStore();
         this.PriceServersStore = usePriveServersStore();
+        this.TreeStore = useTreeStore();
+        this.TreeStore.get();
     }
 }
 </script>

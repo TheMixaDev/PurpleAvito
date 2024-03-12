@@ -14,7 +14,7 @@ import UITableEmpty from './table/UITableEmpty.vue';
                 ref="button"
                 :disabled="disabled">
                 <slot v-if="!options || options.length <= 0 ||
-                            !modelValue || modelValue.length === 0 || modelValue * 1 === 0"></slot>
+                            !modelValue || modelValue.length === 0 || modelValue * 1 === 0 || !options[modelValue]"></slot>
                 <span>
                     {{ options[modelValue] }}
                 </span>

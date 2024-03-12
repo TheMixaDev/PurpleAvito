@@ -12,8 +12,10 @@ import UILabeledInput from '@/components/ui/UILabeledInput.vue';
 import UISetupButton from '@/components/ui/UISetupButton.vue';
 import { useSettingsStore } from '@/stores/settings';
 import { useNewMatrixStore } from '@/stores/newMatrix';
+import { useTreeStore } from '@/stores/tree';
 import { MatrixService } from '@/services/MatrixService';
 import UIProgressBar from '@/components/ui/UIProgressBar.vue';
+import UILabeledCheckbox from '@/components/ui/UILabeledCheckbox.vue';
 </script>
 <template>
     <section>
@@ -39,6 +41,9 @@ import UIProgressBar from '@/components/ui/UIProgressBar.vue';
                     >
                     Выберите родительскую матрицу
                 </UIDropdownWithSearch>
+                <UILabeledCheckbox class="mt-2" v-model="showReadable">
+                    Отображать названия категорий и локаций
+                </UILabeledCheckbox>
             </div>
             <TableComponent
                 @searchApply="NewMatrixStore.applySearch"
@@ -52,21 +57,40 @@ import UIProgressBar from '@/components/ui/UIProgressBar.vue';
                 :creationEnabled="originFile == null"
                 @pageChange="NewMatrixStore.handleSegmentsPageChange"
                 :loadCount="NewMatrixStore.pagination.itemsPerPage"
-                :columns="['ID категории', 'ID локации', 'Цена', 'Действие']"
+                :columns="[showReadable ? 'Категория' : 'ID категории', showReadable ? 'Локация' : 'ID локации', 'Цена', 'Действие']"
                 :emptyText="originFile != null ? 'Предпросмотр недоступен' : 'Данные не найдены'"
                 >
                 <UITableRow v-for="(item, index) in NewMatrixStore.display" :key="index"
-                    :class="!item.microcategory_id || item.microcategory_id.length < 1 || item.microcategory_id == '0' ||
-                            !item.location_id || item.location_id.length < 1 || item.location_id == '0' ? `bg-danger-200` : ``">
+                    :class="!FrontendService.valueParser(item.microcategory_id)
+                            || FrontendService.valueParser(item.microcategory_id) < TreeStore.minMicrocategory
+                            || FrontendService.valueParser(item.microcategory_id) > TreeStore.maxMicrocategory
+                            || !FrontendService.valueParser(item.location_id)
+                            || FrontendService.valueParser(item.location_id) < TreeStore.minLocation
+                            || FrontendService.valueParser(item.location_id) > TreeStore.maxLocation
+                            ? `bg-danger-200` : ``">
                     <UITableCell>
+                        <UIDropdownWithSearch
+                            :options="TreeStore.microcategories"
+                            v-model="item.microcategory_id"
+                            v-if="showReadable">
+                            Не выбрано
+                        </UIDropdownWithSearch>
                         <UILabeledInput
+                            v-else
                             v-model="item.microcategory_id"
                             type="number"
                             :disabled="matrixPublishing"
                             />
                     </UITableCell>
                     <UITableCell>
+                        <UIDropdownWithSearch
+                            :options="TreeStore.locations"
+                            v-model="item.location_id"
+                            v-if="showReadable">
+                            Не выбрано
+                        </UIDropdownWithSearch>
                         <UILabeledInput
+                            v-else
                             v-model="item.location_id"
                             type="number"
                             :disabled="matrixPublishing"
@@ -129,6 +153,7 @@ import UIProgressBar from '@/components/ui/UIProgressBar.vue';
 const regex = /\(\s*(\d+),\s*(\d+),\s*(\d+|null)\s*\)|(\d+),\s*(\d+),\s*(\d+|null)/;
 const SettingsStore = useSettingsStore();
 const NewMatrixStore = useNewMatrixStore();
+const TreeStore = useTreeStore();
 export default {
     name: "PanelView",
     data() {
@@ -139,7 +164,8 @@ export default {
             originFile: null,
 
             parentMatrix: 0,
-            percentLoading: 0
+            percentLoading: 0,
+            showReadable: true
         }
     },
     computed: {
