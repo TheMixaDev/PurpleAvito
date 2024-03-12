@@ -56,11 +56,11 @@ public class PriceController {
         }
 
         TreeNode microCategory = microCategoryRoot.getById(priceRequest.getMicroCategoryId());
-        if (microCategory == null) {
+        if (microCategory == null || microCategory.getName().equals("root")) {
             throw new InvalidDataException("Категория с id " + priceRequest.getMicroCategoryId() + " не найдена");
         }
         TreeNode location = locationsRoot.getById(priceRequest.getLocationId());
-        if (location == null) {
+        if (location == null || location.getName().equals("root")) {
             throw new InvalidDataException("Локация с id " + priceRequest.getLocationId() + " не найдена");
         }
 
