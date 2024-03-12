@@ -200,7 +200,13 @@ public class MatrixController {
         if (sourceBaseline == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new MessageResponse("Матрица с именем " + request.getName() + " не найдена"));
         }
+        Matrix oldBaseline = baselineMatrixAndSegments.getBaselineMatrix();
         baselineMatrixAndSegments.setBaselineMatrix(new Matrix(sourceBaseline.getName()));
+        String error = socDelegatorService.isAllDelegatorsReadyMessage(baselineMatrixAndSegments);
+        if(error != null) {
+            baselineMatrixAndSegments.setBaselineMatrix(oldBaseline);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new MessageResponse(error));
+        }
         // Сохранение изменений
         StaticStorage.saveBaselineAndSegments(baselineMatrixAndSegments);
         socDelegatorService.sendCurrentBaselineAndSegmentsToSOCs();
@@ -247,7 +253,13 @@ public class MatrixController {
             }
         }
         // Сохранение изменений
+        List<DiscountSegment> oldDiscount = baselineMatrixAndSegments.getDiscountSegments();
         baselineMatrixAndSegments.setDiscountSegments(copy);
+        String error = socDelegatorService.isAllDelegatorsReadyMessage(baselineMatrixAndSegments);
+        if(error != null) {
+            baselineMatrixAndSegments.setDiscountSegments(oldDiscount);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new MessageResponse(error));
+        }
         StaticStorage.saveBaselineAndSegments(baselineMatrixAndSegments);
         socDelegatorService.sendCurrentBaselineAndSegmentsToSOCs();
         return new ResponseEntity<>(HttpStatus.OK);
