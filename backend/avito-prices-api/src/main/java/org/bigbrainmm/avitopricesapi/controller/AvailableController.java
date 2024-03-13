@@ -26,7 +26,11 @@ public class AvailableController {
     @GetMapping(value = "/", produces = "application/json")
     public ResponseEntity<MessageResponse> available() {
         logger.info("Принят запрос на is available: " + isAvailable.get());
-        if (isAvailable.get() && updateBaselineAndSegmentsService.dataBaseIsAvailable())
+        if (!updateBaselineAndSegmentsService.dataBaseIsAvailable()) {
+            isAvailable.set(false);
+            updateBaselineAndSegmentsService.startTryingToConnectToDatabase();
+        }
+        if (isAvailable.get())
             return ResponseEntity.status(HttpStatus.OK).body(new MessageResponse("Сервис доступен"));
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(new MessageResponse("Сервис недоступен"));
     }
