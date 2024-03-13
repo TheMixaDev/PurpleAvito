@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
+
 import { Pagination } from '@/models/pagination';
 
 export const useSegmentsStore = defineStore('segments', () => {

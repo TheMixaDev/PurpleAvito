@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
+
 import { TreeService } from '@/services/TreeService';
 
 function treeToDictionary(tree, dictionary) {

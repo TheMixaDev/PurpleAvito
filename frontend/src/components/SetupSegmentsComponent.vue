@@ -8,6 +8,7 @@ import UITableCell from '@/components/ui/table/UITableCell.vue';
 import TableComponent from '@/components/TableComponent.vue';
 
 import { useSettingsStore } from '@/stores/settings';
+
 import { MatrixService } from '@/services/MatrixService';
 </script>
 

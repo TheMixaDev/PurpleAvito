@@ -1,6 +1,8 @@
 <script setup>
-import PriceServiceComponent from '@/components/PriceServiceComponent.vue';
 import UISetupButton from '@/components/ui/UISetupButton.vue';
+
+import PriceServiceComponent from '@/components/PriceServiceComponent.vue';
+
 import { usePriveServersStore } from '@/stores/priceServers';
 import { VMap, VMapArcGisAeroTileLayer, VMapZoomControl, VMapDivMarker, VMapGoogleTileLayer } from 'vue-map-ui';
 </script>

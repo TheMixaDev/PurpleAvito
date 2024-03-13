@@ -1,4 +1,6 @@
 <script setup>
+import UIIndicatorGreen from './ui/indicators/UIIndicatorGreen.vue';
+
 import UITableRow from '@/components/ui/table/UITableRow.vue';
 import UITableCell from '@/components/ui/table/UITableCell.vue';
 
@@ -9,13 +11,13 @@ import UIDropdownWithSearch from '@/components/ui/UIDropdownWithSearch.vue';
 import UILabeledCheckbox from '@/components/ui/UILabeledCheckbox.vue';
 import UILabeledInput from './ui/UILabeledInput.vue';
 
+import { Pagination } from '@/models/pagination';
+
 import { useSettingsStore } from '@/stores/settings';
+import { useTreeStore } from '@/stores/tree';
 
 import { FrontendService } from '@/services/FrontendService';
 import { MatrixService } from '@/services/MatrixService';
-import { useTreeStore } from '@/stores/tree';
-import { Pagination } from '@/models/pagination';
-import UIIndicatorGreen from './ui/indicators/UIIndicatorGreen.vue';
 import { PriceServersService } from '@/services/PriceServersService';
 </script>
 

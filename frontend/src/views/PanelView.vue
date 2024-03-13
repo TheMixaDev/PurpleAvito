@@ -243,7 +243,6 @@ export default {
                                     parsed.push(new MatrixItem(values[0], values[1], values[2]));
                                 } else {
                                     errors.push(values);
-                                    // TODO errors notification?
                                 }
                             }
                         }
@@ -267,7 +266,6 @@ export default {
                                         sucessful++;
                                     } catch {
                                         errors.push(line);
-                                        // TODO errors notification?
                                     }
                                 }
                             }

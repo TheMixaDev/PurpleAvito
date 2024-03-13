@@ -1,9 +1,10 @@
 import { configuration } from "@/assets/configuration";
+
+import { useModal } from "vue-final-modal";
 import PromptFileModal from "@/components/modal/PromptFileModal.vue";
 import WarningModal from "@/components/modal/WarningModal.vue";
 
 import moment from "moment";
-import { useModal } from "vue-final-modal";
 
 export const FrontendService = {
     /**

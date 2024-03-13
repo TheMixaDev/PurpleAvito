@@ -1,7 +1,9 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-import { MatrixService } from '@/services/MatrixService';
+
 import { configuration } from '@/assets/configuration';
+
+import { MatrixService } from '@/services/MatrixService';
 import { useSegmentsStore } from './segments';
 
 export const useSettingsStore = defineStore('settings', () => {

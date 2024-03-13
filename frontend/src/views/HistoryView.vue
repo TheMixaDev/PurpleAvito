@@ -7,8 +7,9 @@ import UIButton from '@/components/ui/UIButton.vue';
 import TableComponent from '@/components/TableComponent.vue';
 
 import { useHistoryStore } from '@/stores/historyStore';
-import { FrontendService } from '@/services/FrontendService';
 import { useMatrixItemsStore } from '@/stores/matrixItemsStore';
+
+import { FrontendService } from '@/services/FrontendService';
 </script>
 
 <template>

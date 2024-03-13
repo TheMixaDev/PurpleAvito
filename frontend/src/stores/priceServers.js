@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
+
 import { PriceServersService } from '@/services/PriceServersService';
 
 export const usePriveServersStore = defineStore('priceServers', () => {

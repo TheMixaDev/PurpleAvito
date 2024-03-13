@@ -1,15 +1,18 @@
 <script setup>
-import { RouterView } from 'vue-router'
-import NotificationModal from '@/components/modal/NotificationModal.vue'
 import PieIcon from './assets/icons/sidepanel/PieIcon.vue';
 import PageIcon from './assets/icons/sidepanel/PageIcon.vue';
 import AddIcon from './assets/icons/sidepanel/AddIcon.vue';
 import LockIcon from './assets/icons/sidepanel/LockIcon.vue';
 import DocumentIcon from './assets/icons/sidepanel/DocumentIcon.vue';
+
 import UISideButton from './components/ui/UISideButton.vue';
 import UIButton from './components/ui/UIButton.vue';
-import { ModalsContainer } from 'vue-final-modal';
 import UILoading from './components/ui/UILoading.vue';
+
+import { ModalsContainer } from 'vue-final-modal';
+import NotificationModal from '@/components/modal/NotificationModal.vue'
+
+import { RouterView } from 'vue-router'
 </script>
 
 <template>

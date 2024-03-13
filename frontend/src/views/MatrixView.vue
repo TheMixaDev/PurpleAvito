@@ -8,12 +8,14 @@ import UILabeledCheckbox from '@/components/ui/UILabeledCheckbox.vue';
 
 import TableComponent from '@/components/TableComponent.vue';
 
+import { MatrixItem } from '@/models/matrixItem';
+
+import { useNewMatrixStore } from '@/stores/newMatrix';
 import { useMatrixItemsStore } from '@/stores/matrixItemsStore';
 import { useSettingsStore } from '@/stores/settings';
 import { useTreeStore } from '@/stores/tree';
+
 import { FrontendService } from '@/services/FrontendService';
-import { useNewMatrixStore } from '@/stores/newMatrix';
-import { MatrixItem } from '@/models/matrixItem';
 </script>
 
 <template>
