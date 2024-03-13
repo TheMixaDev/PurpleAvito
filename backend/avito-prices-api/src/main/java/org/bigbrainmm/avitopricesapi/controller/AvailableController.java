@@ -6,6 +6,7 @@ import org.bigbrainmm.avitopricesapi.dto.MessageResponse;
 import org.bigbrainmm.avitopricesapi.service.UpdateBaselineAndSegmentsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +18,7 @@ import static org.bigbrainmm.avitopricesapi.StaticStorage.isAvailable;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/available")
+@Lazy(false)
 @Tag(name = "Проверка доступности сервиса", description = "Доступность сервиса определяет то, может ли он сейчас выдать корректную цену или нет.")
 public class AvailableController {
     private final UpdateBaselineAndSegmentsService updateBaselineAndSegmentsService;
