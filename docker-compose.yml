@@ -36,17 +36,18 @@ services:
       PGUSER: replicator
       PGPASSWORD: Qwerty123
     command: |
-      bash -c "
-      rm -rf /var/lib/postgresql/data/*
-      until pg_basebackup --progress --pgdata=/var/lib/postgresql/data -R --slot=replication_slot1 --host=postgres-primary --port=5432 --checkpoint=fast
-      do
-      echo 'Waiting for primary to connect...'
-      sleep 1s
-      done
-      echo 'Backup done, starting replica...'
+      bash -c '
+      if [ ! "$(ls -A /var/lib/postgresql/data)" ]; then
+        until pg_basebackup --progress --no-clean --pgdata=/var/lib/postgresql/data -R --slot=replication_slot1 --host=postgres-primary --port=5432 --checkpoint=fast
+        do
+        echo "Waiting for primary to connect..."
+        sleep 1s
+        done
+        echo "Backup done, starting replica..."
+      fi
       chmod 0700 /var/lib/postgresql/data
       postgres -p 5433
-      "
+      '
 
   postgres-replica-2:
     image: postgres:14-alpine
@@ -64,17 +65,18 @@ services:
       PGUSER: replicator
       PGPASSWORD: Qwerty123
     command: |
-      bash -c "
-      rm -rf /var/lib/postgresql/data/*
-      until pg_basebackup --progress --pgdata=/var/lib/postgresql/data -R --slot=replication_slot2 --host=postgres-primary --port=5432 --checkpoint=fast
-      do
-      echo 'Waiting for primary to connect...'
-      sleep 1s
-      done
-      echo 'Backup done, starting replica...'
+      bash -c '
+      if [ ! "$(ls -A /var/lib/postgresql/data)" ]; then
+        until pg_basebackup --progress --no-clean --pgdata=/var/lib/postgresql/data -R --slot=replication_slot2 --host=postgres-primary --port=5432 --checkpoint=fast
+        do
+        echo "Waiting for primary to connect..."
+        sleep 1s
+        done
+        echo "Backup done, starting replica..."
+      fi
       chmod 0700 /var/lib/postgresql/data
       postgres -p 5434
-      "
+      '
 
   avito-admin-api:
     container_name: avito-admin-api
