@@ -12,6 +12,8 @@ import lombok.Setter;
 @Setter
 @Schema(description = "Координаты")
 public class Coordinates {
+    @Schema(description = "Широта", example = "55.751244")
     double lat;
+    @Schema(description = "Долгота", example = "37.618423")
     double lon;
 }

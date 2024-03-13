@@ -9,6 +9,10 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+/**
+ * Сервис для работы с пользователем и авторизации
+ * Но сказали она не нужна, так что она просто есть
+ */
 @Service
 @RequiredArgsConstructor
 public class UserService {

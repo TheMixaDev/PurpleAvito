@@ -16,7 +16,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
-@Tag(name = "Аутентификация")
+@Tag(name = "Аутентификация", description = "Методы для аутентификации. Работает через JWT токены. " +
+        "Но сказали, что она не нужна, потому методы как бы работают, " +
+        "но все равно разрешен маппинг на все запросы мимо авторизации.")
 public class AuthController {
     private final AuthenticationService authenticationService;
 

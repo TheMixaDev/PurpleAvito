@@ -22,6 +22,6 @@ public class PriceService {
     private long ping;
     @Schema(description = "Имя сервиса", example = "Москва")
     private String name;
-    @Schema(description = "Кооридаты")
+    @Schema(description = "Координаты")
     private Coordinates coordinates;
 }

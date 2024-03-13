@@ -18,7 +18,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-
+/**
+ * Генерация JWT ключей для авторизации
+ */
 @Service
 @RequiredArgsConstructor
 public class JwtService {

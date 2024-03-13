@@ -30,7 +30,7 @@ import java.util.stream.IntStream;
 @RequiredArgsConstructor
 @RequestMapping("/api/services")
 @RestController
-@Tag(name = "Работа с сервисами отдачи цен")
+@Tag(name = "Работа с сервисами отдачи цен", description = "Посмотреть статус сервисов отдачи цен в форматах, описанных к ручкам")
 public class ServicesController {
     @Value("${AVITO_PRICES_API_STATUS_TIMEOUT}")
     private static int statusTimeout;

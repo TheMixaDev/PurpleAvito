@@ -9,6 +9,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * Entity пользователя
+ * Он есть, используется для авторизации,
+ * Но авторизация отключена, так как сказали не надо...
+ */
 @Builder
 @Getter
 @Setter

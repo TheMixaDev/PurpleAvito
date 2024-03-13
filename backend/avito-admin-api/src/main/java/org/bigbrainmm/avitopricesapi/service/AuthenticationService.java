@@ -11,6 +11,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+/**
+ * Сервис для работы с аутентификацией
+ */
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {

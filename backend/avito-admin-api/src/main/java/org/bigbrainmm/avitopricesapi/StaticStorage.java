@@ -12,12 +12,28 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+/**
+ * Статичное хранилище
+ */
 public class StaticStorage {
+    /**
+     * Дерево микрокатегорий
+     */
     public static TreeNode microCategoryRoot;
+    /**
+     * Дерево локаций
+     */
     public static TreeNode locationsRoot;
+    /**
+     * Id пользвателей и их скидочных сегменты
+     */
     public static UserSegments userSegments;
+    /**
+     * Текущая основная матрица и сегменты со сикдочными матрицами, кторые им принадолежат
+     */
     public static BaselineMatrixAndSegments baselineMatrixAndSegments;
 
+    // Инициализация
     static {
         microCategoryRoot = TreeNode.buildTreeFromFile("microcategories.txt");
         locationsRoot = TreeNode.buildTreeFromFile("locations.txt");
@@ -40,6 +56,11 @@ public class StaticStorage {
         }
     }
 
+    /**
+     * Сохраняет текущую ценовую матрицу и скидочные матрицы в локальное хранилище
+     *
+     * @param bms the bms
+     */
     public static void saveBaselineAndSegments(BaselineMatrixAndSegments bms) {
         try {
             ObjectMapper mapper = new ObjectMapper();

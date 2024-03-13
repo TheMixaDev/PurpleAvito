@@ -11,13 +11,28 @@ import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import javax.sql.DataSource;
 import java.util.List;
 
+/**
+ * Точка входа в приложение
+ */
 @SpringBootApplication
 public class AvitoPricesApiApplication {
 
+    /**
+     * The entry point of application.
+     *
+     * @param args the input arguments
+     */
     public static void main(String[] args) {
         SpringApplication.run(AvitoPricesApiApplication.class, args);
     }
 
+    /**
+     * Подгрузка первых данных, что дали вначале хака
+     *
+     * @param dataSource   the data source
+     * @param jdbcTemplate the jdbc template
+     * @return the data source initializer
+     */
     @Bean
     public DataSourceInitializer dataSourceInitializer(DataSource dataSource, JdbcTemplate jdbcTemplate) {
         int count = jdbcTemplate.queryForObject("select COUNT(*) from source_baseline", Integer.class);

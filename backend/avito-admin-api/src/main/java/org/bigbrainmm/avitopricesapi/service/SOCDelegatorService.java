@@ -31,23 +31,44 @@ import java.util.stream.Collectors;
 import static org.bigbrainmm.avitopricesapi.StaticStorage.*;
 import static org.bigbrainmm.avitopricesapi.StaticStorage.baselineMatrixAndSegments;
 
+/**
+ * Делегатор севисов отдачи цен, невероятно крутая штука
+ * Пояснение: СОЦ - сервис отдачи цен
+ */
 @RequiredArgsConstructor
 @Service
 public class SOCDelegatorService {
+
+    /**
+     * URL адреса СОЦов
+     * Подгружается из переменной окружения
+     */
     @Value("${AVITO_PRICES_SERVICES_URLS}")
     private String servicesUrl;
     private final Logger logger = LoggerFactory.getLogger(SOCDelegatorService.class);
     @Getter
     private List<String> socUrls;
 
+    /**
+     * Веб клиент для отправки запросов на другие СОЦы
+     */
     static WebClient webClient = WebClient.create();
 
+    /**
+     * Инициализация при старте сервера
+     * + Отправка данных о текущей основной матрице и сегментах на другие СОЦы при старте
+     */
     @PostConstruct
     public void init() {
         socUrls = List.of(servicesUrl.split(","));
         sendCurrentBaselineAndSegmentsToSOCs();
     }
 
+    /**
+     * Отправка данных о текущей основной матрице и сегментах на другие СОЦы
+     * Выполняется асинхронно, ответ не ожидается, необходимо исключительно для оповещения других соцов
+     * о замене текущей матрицы и сегментов
+     */
     public void sendCurrentBaselineAndSegmentsToSOCs() {
         String[] urls = socUrls.stream().map(url -> url + "/api/matrices/setup/baseline_segments").toArray(String[]::new);
         Arrays.stream(urls).forEach(url -> {
@@ -61,6 +82,12 @@ public class SOCDelegatorService {
         });
     }
 
+    /**
+     * Проверяет, что все активные сервисы готовы к изменению главной матрицы
+     *
+     * @param baselineMatrixAndSegments the baseline matrix and segments
+     * @return the string
+     */
     public String isAllDelegatorsReadyMessage(BaselineMatrixAndSegments baselineMatrixAndSegments) {
         Tuple<Integer, Integer> result = isAllDelegatorsReady(baselineMatrixAndSegments);
         if(result.getFirst().intValue() != result.getSecond().intValue() || result.getSecond().intValue() == 0)
@@ -68,7 +95,7 @@ public class SOCDelegatorService {
         return null;
     }
 
-    public Tuple<Integer, Integer> isAllDelegatorsReady(BaselineMatrixAndSegments baselineMatrixAndSegments) {
+    private Tuple<Integer, Integer> isAllDelegatorsReady(BaselineMatrixAndSegments baselineMatrixAndSegments) {
         ExecutorService executor = Executors.newFixedThreadPool(socUrls.size());
 
         List<CompletableFuture<Tuple<Boolean, Boolean>>> futures = socUrls.stream()
