@@ -8,6 +8,7 @@ import org.bigbrainmm.avitoadminapi.dto.Coordinates;
 import org.bigbrainmm.avitoadminapi.dto.PriceService;
 import org.bigbrainmm.avitoadminapi.service.SOCDelegatorService;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,6 +28,7 @@ import java.util.stream.IntStream;
 @RequiredArgsConstructor
 @RequestMapping("/api/services")
 @RestController
+@Lazy(false)
 @Tag(name = "Работа с сервисами отдачи цен", description = "Посмотреть статус сервисов отдачи цен в форматах, описанных к ручкам")
 public class ServicesController {
     @Value("${AVITO_PRICES_API_STATUS_TIMEOUT}")

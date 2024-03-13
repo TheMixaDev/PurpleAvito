@@ -1,10 +1,13 @@
 drop table if exists discount_matrix_1;
 
 create table discount_matrix_1(
+    id bigint,
     microcategory_id int,
     location_id int,
     price int
 );
+CREATE INDEX idx_discount_matrix_1_hash ON discount_matrix_1 USING hash(id);
+CREATE TRIGGER before_insert_discount_matrix_1 BEFORE INSERT ON discount_matrix_1 FOR EACH ROW EXECUTE FUNCTION set_matrix_id();
 
 insert into discount_matrix_1 (microcategory_id, location_id, price)
 values  (18, 1, 5),

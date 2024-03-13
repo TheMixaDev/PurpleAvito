@@ -9,6 +9,7 @@ import org.bigbrainmm.avitopricesapi.dto.*;
 import org.bigbrainmm.avitopricesapi.service.UpdateBaselineAndSegmentsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -34,6 +35,9 @@ public class PriceController {
     private final JdbcTemplate jdbcTemplate;
     private final RestTemplate restTemplate;
     private final Logger logger = LoggerFactory.getLogger(PriceController.class);
+
+    @Value("${USE_HASH}")
+    private boolean useHash;
 
     @Schema(description = "Запрос цены")
     @PostMapping(value = "/price")
@@ -114,8 +118,10 @@ public class PriceController {
             // берём верхнюю ноду локации
             // если она не нулл
                 // return findPrice(initial_MID, initial_MID, parent_location_id)
-
-        String sql = "select * from " + tableName + " where microcategory_id = " + microCategory.getId() + " and location_id = " + location.getId() + " and price is not null;";
+        long id = useHash ? location.getId() + 4108 * (microCategory.getId() - 1) : -1;
+        String sql = useHash ? "select * from " + tableName + " where id = " + id + " and price is not null;"
+                : "select * from " + tableName + " where microcategory_id = " + microCategory.getId() + " and location_id = " + location.getId() + " and price is not null;";
+        logger.info(sql);
         List<PriceResponse> res = jdbcTemplate.query(sql, (rs, rowNum) ->
                 new PriceResponse(rs.getLong("price"), rs.getLong("location_id"), rs.getLong("microcategory_id"), tableName, null));
         if (!res.isEmpty() && res.get(0).getPrice() != 0) return res.get(0);

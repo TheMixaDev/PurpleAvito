@@ -110,6 +110,7 @@ services:
       - SELF_URL=http://avito-prices-api-primary:8081
       - AVITO_PRICES_SERVICES_URLS=http://avito-prices-api-primary:8081,http://avito-prices-api-replica-1:8082,http://avito-prices-api-replica-2:8083
       - LOCATION=1
+      - USE_HASH=true
 
   avito-prices-api-replica-1:
     container_name: avito-prices-api-replica-1
@@ -127,6 +128,7 @@ services:
       - SELF_URL=http://avito-prices-api-replica-1:8082
       - AVITO_PRICES_SERVICES_URLS=http://avito-prices-api-primary:8081,http://avito-prices-api-replica-1:8082,http://avito-prices-api-replica-2:8083
       - LOCATION=6
+      - USE_HASH=true
 
   avito-prices-api-replica-2:
     container_name: avito-prices-api-replica-2
@@ -144,6 +146,7 @@ services:
       - SELF_URL=http://avito-prices-api-replica-2:8083
       - AVITO_PRICES_SERVICES_URLS=http://avito-prices-api-primary:8081,http://avito-prices-api-replica-1:8082,http://avito-prices-api-replica-2:8083
       - LOCATION=12
+      - USE_HASH=true
   
   nginx:
     container_name: nginx

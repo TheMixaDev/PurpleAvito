@@ -102,8 +102,10 @@ public class MatrixController {
                         "Для включения этой возможности выставите DEMO_SERVER=false в переменных окружения сервера админ-панели.\", \"showModal\": true }");
             }
             int counter = 0;
-            if (name.equals("discount_matrix_new")) jdbcTemplate.update("create table " + newName + " (microcategory_id int, location_id int, price int);");
+            if (name.equals("discount_matrix_new")) jdbcTemplate.update("create table " + newName + " (id bigint, microcategory_id int, location_id int, price int);");
             else jdbcTemplate.update("create table " + newName + " as select * from " + name);
+            jdbcTemplate.update("CREATE INDEX idx_" + newName + "_hash ON " + newName + " USING hash(id);");
+            jdbcTemplate.update("CREATE TRIGGER before_insert_" + newName + " BEFORE INSERT ON " + newName + " FOR EACH ROW EXECUTE FUNCTION set_matrix_id();");
 
             if (name.contains("baseline_matrix")) {
                 newSourceBaseline = new SourceBaseline(newName, false);
