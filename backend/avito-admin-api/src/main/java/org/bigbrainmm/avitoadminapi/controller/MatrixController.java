@@ -13,6 +13,8 @@ import org.bigbrainmm.avitoadminapi.repository.DiscountBaselineRepository;
 import org.bigbrainmm.avitoadminapi.repository.HistoryRepository;
 import org.bigbrainmm.avitoadminapi.repository.SourceBaselineRepository;
 import org.bigbrainmm.avitoadminapi.service.SOCDelegatorService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -33,6 +35,7 @@ import static org.bigbrainmm.avitoadminapi.StaticStorage.*;
 @Tag(name = "Работа с матрицами", description = "Тут располагаются методы для установки, обновления, загрузки, клонирования, просмотра и многих других операций над матрицами")
 public class MatrixController {
 
+    private final Logger logger = LoggerFactory.getLogger(MatrixController.class);
     private final DiscountBaselineRepository discountBaselineRepository;
     private final SourceBaselineRepository sourceBaselineRepository;
     private final HistoryRepository historyRepository;
@@ -41,6 +44,10 @@ public class MatrixController {
 
     @Value("${DEMO_SERVER}")
     private boolean isDemo;
+    @Value("${AUTO_CACHE}")
+    private boolean isAutoCache;
+    @Value("${USE_HASH}")
+    private boolean useHash;
     private final int MAX_SQL_PACKET_SIZE = 100000;
 
     @GetMapping(produces = "application/json")
@@ -102,7 +109,7 @@ public class MatrixController {
                         "Для включения этой возможности выставите DEMO_SERVER=false в переменных окружения сервера админ-панели.\", \"showModal\": true }");
             }
             int counter = 0;
-            if (name.equals("discount_matrix_new")) jdbcTemplate.update("create table " + newName + " (id bigint, microcategory_id int, location_id int, price int);");
+            if (name.equals("discount_matrix_new")) jdbcTemplate.update("create table " + newName + " (id bigint, microcategory_id int, location_id int, price int, found_price int, found_microcategory_id int, found_location_id int);");
             else jdbcTemplate.update("create table " + newName + " as select * from " + name);
             jdbcTemplate.update("CREATE INDEX idx_" + newName + "_hash ON " + newName + " USING hash(id);");
             jdbcTemplate.update("CREATE TRIGGER before_insert_" + newName + " BEFORE INSERT ON " + newName + " FOR EACH ROW EXECUTE FUNCTION set_matrix_id();");
@@ -158,6 +165,8 @@ public class MatrixController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{ \"message\": \" Неверный формат тела запроса. \" }");
             } finally {
                 if (completedSuccessfully) {
+                    if(isAutoCache)
+                        fillMatrix(name);
                     if (name.contains("baseline_matrix")) {
                         newSourceBaseline.setReady(true);
                         sourceBaselineRepository.save(newSourceBaseline);
@@ -290,6 +299,26 @@ public class MatrixController {
         historyRepository.saveAll(changes);
         socDelegatorService.sendCurrentBaselineAndSegmentsToSOCs();
         return ResponseEntity.ok(new MessageResponse("Изменения выполнены успешно"));
+    }
+
+    public void fillMatrix(String name) {
+        logger.info("Filling matrix "+name);
+        String sql = "select * from " + name + " order by id asc"; // Возможно даст ошибку, проверить postgres
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql);
+        List<MatrixRow> matrixRows = new ArrayList<>();
+        for (Map<String, Object> row : rows) {
+            //if row.get("price") == null
+                // Смотрим строку на 1 микрокатегорию вверх
+                    // если в ней стоит "found_price" - копируем "found_price", "found_location", "found_microcategory"
+                // Смотрим строку на 1 локацию вверх (с изначальной микрокатегорией)
+                    // если в ней стоит "found_price" - копируем "found_price", "found_location", "found_microcategory"
+                // Смотрим строку на 1 локацию и 1 категорию вверх
+                    // если в ней стоит "found_price" - копируем "found_price", "found_location", "found_microcategory"
+            //else
+                // поставить в "found_price", "found_location", "found_microcategory" в виде текущих значений строки
+        }
+        // если "found_price" == null после всех проверенных строк - поставить "found_price" = -1
+        // добавить is_cached = true (дефолтное значение при инициализации баз поставить false)
     }
 
     @ExceptionHandler(InvalidDataException.class)

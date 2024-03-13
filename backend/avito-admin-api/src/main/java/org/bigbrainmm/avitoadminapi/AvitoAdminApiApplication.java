@@ -50,6 +50,7 @@ public class AvitoAdminApiApplication {
         DataSourceInitializer initializer = new DataSourceInitializer();
         initializer.setDataSource(dataSource);
         initializer.setDatabasePopulator(populator);
+        // где-то тут поставить инициализацию кеша для стандартных матриц
         return initializer;
     }
 

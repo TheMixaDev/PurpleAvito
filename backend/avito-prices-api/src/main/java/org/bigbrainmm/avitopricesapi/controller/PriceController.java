@@ -124,6 +124,9 @@ public class PriceController {
         logger.info(sql);
         List<PriceResponse> res = jdbcTemplate.query(sql, (rs, rowNum) ->
                 new PriceResponse(rs.getLong("price"), rs.getLong("location_id"), rs.getLong("microcategory_id"), tableName, null));
+        // Если "found_price" == -1, то вернуть null
+        // Если "found_price" != null, то вернуть "found_price" - поменять на is_cached?
+        // Иначе - запустить алгоритм
         if (!res.isEmpty() && res.get(0).getPrice() != 0) return res.get(0);
 
         TreeNode parentNodeMic = microCategory.getParent();
