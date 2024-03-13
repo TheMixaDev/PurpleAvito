@@ -26,7 +26,7 @@ import static org.bigbrainmm.avitopricesapi.StaticStorage.isAvailable;
 
 @RequiredArgsConstructor
 @RestController
-@Tag(name = "Работа с матрицами")
+@Tag(name = "Работа с матрицами", description = "Тут располагаются методы для установки, обновления, загрузки, клонирования, просмотра и многих других операций над матрицами")
 @RequestMapping("/api/matrices")
 public class MatrixController {
 

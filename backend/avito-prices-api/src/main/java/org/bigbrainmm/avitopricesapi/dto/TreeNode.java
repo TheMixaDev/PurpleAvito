@@ -14,13 +14,18 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Собственно разработанный класс дерева
+ * Удобный для перемещения
+ * Умеет создавать экземпляр себя из .txt файла с отступами в пробел, говорящими об уровне дерева
+ * Используется для дерева микрокатегорий и локаций
+ */
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
 @Schema(description = "Модель дерева для вывода категорий или локаций")
 public class TreeNode {
-
     @Schema(description = "Идентификатор узла", example = "1")
     private Long id;
     @Schema(description = "Имя узла", example = "root")
@@ -31,6 +36,13 @@ public class TreeNode {
     @Schema(description = "Список подузлов")
     private List<TreeNode> subNodes = new ArrayList<>();
 
+    /**
+     * Instantiates a new Tree node.
+     *
+     * @param id     the id
+     * @param name   the name
+     * @param parent the parent
+     */
     public TreeNode(Long id, String name, TreeNode parent) {
         this.id = id;
         this.name = name;
@@ -46,6 +58,11 @@ public class TreeNode {
         }
     }
 
+    /**
+     * Add sub node.
+     *
+     * @param sn the sn
+     */
     public void addSubNode(TreeNode sn) {
         if (sn != null) {
             subNodes.add(sn);
@@ -53,6 +70,12 @@ public class TreeNode {
         }
     }
 
+    /**
+     * Gets by id.
+     *
+     * @param id the id
+     * @return the by id
+     */
     public TreeNode getById(Long id) {
         if (this.id.equals(id)) {
             return this;
@@ -73,6 +96,12 @@ public class TreeNode {
         return sb.toString();
     }
 
+    /**
+     * Build tree from file tree node.
+     *
+     * @param filePath the file path
+     * @return the tree node
+     */
     public static TreeNode buildTreeFromFile(String filePath) {
         Long idCounter = 0L;
         TreeNode root = new TreeNode(idCounter, "root", null);
@@ -128,6 +157,12 @@ public class TreeNode {
         return count;
     }
 
+    /**
+     * Print tree.
+     *
+     * @param node   the node
+     * @param indent the indent
+     */
     public static void printTree(TreeNode node, int indent) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < indent; i++) {

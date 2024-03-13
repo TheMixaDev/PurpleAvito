@@ -9,15 +9,14 @@ import org.bigbrainmm.avitopricesapi.dto.DiscountSegment;
 import org.bigbrainmm.avitopricesapi.dto.Matrix;
 import org.bigbrainmm.avitopricesapi.repository.DiscountBaselineRepository;
 import org.bigbrainmm.avitopricesapi.repository.SourceBaselineRepository;
-import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -28,7 +27,12 @@ import java.util.concurrent.TimeUnit;
 
 import static org.bigbrainmm.avitopricesapi.StaticStorage.*;
 
+/**
+ * Сервис обновления, актуализации, проверки и других методов для того, чтобы
+ * минимизировать моргание цен. Подробнее о нюансах работы будет в презентации.
+ */
 @Service
+@Lazy(false)
 @RequiredArgsConstructor
 @Getter
 public class UpdateBaselineAndSegmentsService {
@@ -48,6 +52,13 @@ public class UpdateBaselineAndSegmentsService {
     private final Logger logger = LoggerFactory.getLogger(UpdateBaselineAndSegmentsService.class);
     private String url;
 
+    /**
+     * Загрузка основной ценовой матрицы и скидочных сегментов при старте сервера
+     * Запрашивает данные с сервера и проверяет их актуальность в своей бд, если всё ок isAvailable = true
+     * Если нет, то запускается поток обновления запросами с основного сервера 5 раз с timestamp в 1000 миллисекунд
+     * Если ответ от него так и не поступил, тогда СОЦ берёт URL других СОЦ'ов
+     * Получает данные с них и присваивает себе те, время обновления которых наиболее актуальное
+     */
     @PostConstruct
     public void loadBaselineAndSegments() {
         url = adminServerUrl + "/api/matrices/setup";
@@ -67,18 +78,25 @@ public class UpdateBaselineAndSegmentsService {
 
 
     private boolean startUpdatingThreadStarted = false;
+
+    /**
+     * Запуск потока обновления.
+     * Данные запрашиваются с основного сервера 5 раз с timestamp в 1000 миллисекунд
+     * Если ответ от него так и не поступил, тогда СОЦ берёт URL других СОЦ'ов
+     * Получает данные с них и присваивает себе те, время обновления которых наиболее актуальное
+     */
     public void startUpdatingThread() {
         if (startUpdatingThreadStarted) return;
         Thread thread = new Thread(() -> {
-            int counter = 0, maxAttempts = 3;
+            int counter = 0, maxAttempts = 5;
             boolean success = updateBaselineAndSegmentsFromServer();
             while (!isDataUpdated(baselineMatrixAndSegments) || !success) {
                 try {
-                    Thread.sleep(400);
+                    Thread.sleep(1000);
                     counter++;
                     success = updateBaselineAndSegmentsFromServer();
                     if (counter >= maxAttempts) {
-                        startTryingToUpdateBaselineAndSegmentsFromAnotherSOCs();
+                        tryToUpdateBaselineAndSegmentsFromAnotherSOCs();
                         break;
                     }
                 } catch (InterruptedException ignored) { }
@@ -94,6 +112,10 @@ public class UpdateBaselineAndSegmentsService {
     }
 
     private boolean tryingToConnectToDatabaseStarted = false;
+
+    /**
+     * Поток попытки восстановить соединение с базой данных
+     */
     public void startTryingToConnectToDatabase() {
         if (tryingToConnectToDatabaseStarted) return;
         Thread thread = new Thread(() -> {
@@ -111,6 +133,11 @@ public class UpdateBaselineAndSegmentsService {
         tryingToConnectToDatabaseStarted = true;
     }
 
+    /**
+     * Update baseline and segments from server boolean.
+     *
+     * @return the boolean
+     */
     public boolean updateBaselineAndSegmentsFromServer() {
         try {
             baselineMatrixAndSegments = restTemplate.getForEntity(url, BaselineMatrixAndSegments.class).getBody();
@@ -125,7 +152,12 @@ public class UpdateBaselineAndSegmentsService {
         }
     }
 
-    public void startTryingToUpdateBaselineAndSegmentsFromAnotherSOCs() {
+    /**
+     * Попытка получения данных с других СОЦ'ов
+     * Получает данные с них и присваивает себе те, время обновления которых наиболее актуальное
+     * ЕСЛИ получилось так, что все СОЦ'ы лежат, то он берёт весь удар на себя
+     */
+    public void tryToUpdateBaselineAndSegmentsFromAnotherSOCs() {
         try {
             List<BaselineMatrixAndSegments> bs = new ArrayList<>();
             Arrays.stream(servicesUrl.split(",")).filter(s -> !s.isEmpty() && !s.equals(selfUrl)).forEach(s -> {
@@ -157,6 +189,12 @@ public class UpdateBaselineAndSegmentsService {
         }
     }
 
+    /**
+     * Есть ли в базе данных, прикреплённой к сервису текущая основная ценовая матрица и скидочные сегменты
+     *
+     * @param t the t
+     * @return the boolean
+     */
     public boolean isDataUpdated(BaselineMatrixAndSegments t) {
         return hasBaselineMatrix(t.getBaselineMatrix()) && hasDiscountSegments(t.getDiscountSegments());
     }
@@ -177,6 +215,13 @@ public class UpdateBaselineAndSegmentsService {
     }
 
     private final ExecutorService executor = Executors.newCachedThreadPool();
+
+    /**
+     * Проверяет доступность базы данных с максимальным пингом в MAX_DATABASE_PING_IN_MILLIS миллисекунд
+     * Максимальный пинг указывается в константе MAX_DATABASE_PING_IN_MILLIS переменной окружения
+     *
+     * @return the boolean
+     */
     public boolean dataBaseIsAvailable() {
         try {
             Future<?> future = executor.submit(() -> {

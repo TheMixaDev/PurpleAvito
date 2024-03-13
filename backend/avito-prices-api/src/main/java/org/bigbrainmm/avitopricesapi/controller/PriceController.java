@@ -9,6 +9,7 @@ import org.bigbrainmm.avitopricesapi.dto.*;
 import org.bigbrainmm.avitopricesapi.service.UpdateBaselineAndSegmentsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -35,6 +36,9 @@ public class PriceController {
     private final RestTemplate restTemplate;
     private final Logger logger = LoggerFactory.getLogger(PriceController.class);
 
+    @Value("${USE_HASH}")
+    private boolean useHash;
+
     @Schema(description = "Запрос цены")
     @PostMapping(value = "/price")
     public ResponseEntity<PriceResponse> getPrice(@RequestBody PriceRequest priceRequest) {
@@ -59,7 +63,8 @@ public class PriceController {
             if (!responseEntity.getStatusCode().equals(HttpStatus.SERVICE_UNAVAILABLE)) {
                 logger.info("Выполнен успешный редирект на другой СОЦ");
             }
-            return responseEntity;
+            // Возват тела и статус кода из редиректа во избежании дублирования хэдеров
+            return new ResponseEntity<>(responseEntity.getBody(), responseEntity.getStatusCode());
         }
 
         TreeNode microCategory = microCategoryRoot.getById(priceRequest.getMicroCategoryId());
@@ -113,10 +118,15 @@ public class PriceController {
             // берём верхнюю ноду локации
             // если она не нулл
                 // return findPrice(initial_MID, initial_MID, parent_location_id)
-
-        String sql = "select * from " + tableName + " where microcategory_id = " + microCategory.getId() + " and location_id = " + location.getId() + " and price is not null;";
+        long id = useHash ? location.getId() + 4108 * (microCategory.getId() - 1) : -1;
+        String sql = useHash ? "select * from " + tableName + " where id = " + id + " and price is not null;"
+                : "select * from " + tableName + " where microcategory_id = " + microCategory.getId() + " and location_id = " + location.getId() + " and price is not null;";
+        logger.info(sql);
         List<PriceResponse> res = jdbcTemplate.query(sql, (rs, rowNum) ->
                 new PriceResponse(rs.getLong("price"), rs.getLong("location_id"), rs.getLong("microcategory_id"), tableName, null));
+        // Если "found_price" == -1, то вернуть null
+        // Если "found_price" != null, то вернуть "found_price" - поменять на is_cached?
+        // Иначе - запустить алгоритм
         if (!res.isEmpty() && res.get(0).getPrice() != 0) return res.get(0);
 
         TreeNode parentNodeMic = microCategory.getParent();
@@ -140,6 +150,13 @@ public class PriceController {
                 x -> Objects.equals(x.getId(), segmentId)).findFirst().map(DiscountSegment::getName).orElse(null);
     }
 
+    /**
+     * В случае, если сервис не доступные (isAvailable == false), то пытаемся получить цену из других СОЦ
+     * Своего рода проксирование. Сперва определяются доступные url СОЦ'ов, у которых isAvailable = true
+     * Потом запрос перенаправляется к одному из этих СОЦ'ов, что вернул успешный ответ
+     * Если все СОЦ'ы недоступны, то возвращаем статус 503 (но такое возможно только если прям ВСЕ СОЦы лежат)
+     * @param priceRequest
+     */
     private ResponseEntity<PriceResponse> tryGetPriceFromAnotherSOCs(PriceRequest priceRequest) {
         List<String> urls = Arrays.stream(updateBaselineAndSegmentsService.getServicesUrl().split(","))
                 .filter(url -> !url.equals(updateBaselineAndSegmentsService.getSelfUrl())).toList();
