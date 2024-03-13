@@ -58,7 +58,6 @@ export default {
         return {
             loading: false,
             count: -1,
-            showReadable: true,
             pageSelector: 1
         }
     },

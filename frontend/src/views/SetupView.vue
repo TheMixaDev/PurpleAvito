@@ -27,9 +27,7 @@ export default {
     name: "SetupView",
     data() {
         return {
-            selectedPanel: 0,
-            changed: false,
-            mainChanged: false
+            selectedPanel: 0
         }
     },
     computed: {
