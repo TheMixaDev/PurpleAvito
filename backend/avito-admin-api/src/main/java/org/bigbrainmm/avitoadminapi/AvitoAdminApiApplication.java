@@ -37,6 +37,7 @@ public class AvitoAdminApiApplication {
         int count = jdbcTemplate.queryForObject("select COUNT(*) from source_baseline", Integer.class);
         if (count > 0) return null;
         ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
+        jdbcTemplate.execute("CREATE OR REPLACE FUNCTION set_matrix_id() RETURNS TRIGGER AS $$ BEGIN NEW.id := NEW.location_id + 4108 * (NEW.microcategory_id - 1); RETURN NEW; END; $$ LANGUAGE plpgsql;");
         count = jdbcTemplate.queryForObject("select count(*) from pg_user where usename='replicator';", Integer.class);
         if (count == 0) populator.addScript(new ClassPathResource("sql_init/00_init.sql"));
         populator.addScript(new ClassPathResource("sql_init/baseline_matrix_1.sql"));
