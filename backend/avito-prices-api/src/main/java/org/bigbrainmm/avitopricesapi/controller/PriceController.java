@@ -141,6 +141,13 @@ public class PriceController {
                 x -> Objects.equals(x.getId(), segmentId)).findFirst().map(DiscountSegment::getName).orElse(null);
     }
 
+    /**
+     * В случае, если сервис не доступные (isAvailable == false), то пытаемся получить цену из других СОЦ
+     * Своего рода проксирование. Сперва определяются доступные url СОЦ'ов, у которых isAvailable = true
+     * Потом запрос перенаправляется к одному из этих СОЦ'ов, что вернул успешный ответ
+     * Если все СОЦ'ы недоступны, то возвращаем статус 503 (но такое возможно только если прям ВСЕ СОЦы лежат)
+     * @param priceRequest
+     */
     private ResponseEntity<PriceResponse> tryGetPriceFromAnotherSOCs(PriceRequest priceRequest) {
         List<String> urls = Arrays.stream(updateBaselineAndSegmentsService.getServicesUrl().split(","))
                 .filter(url -> !url.equals(updateBaselineAndSegmentsService.getSelfUrl())).toList();

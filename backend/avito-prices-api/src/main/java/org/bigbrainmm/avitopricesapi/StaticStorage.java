@@ -16,14 +16,35 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * Статичное хранилище
+ */
 @Service
 public class StaticStorage {
+    /**
+     * Флаг доступности сервера
+     * Невероятно ключевой флаг в нашей реализации, работает для синхронизации в данных между
+     * сервисами отдачи цен. Подробнее будет рассказано в презентации
+     */
     public static AtomicBoolean isAvailable = new AtomicBoolean(false);
+    /**
+     * Дерево микрокатегорий
+     */
     public static TreeNode microCategoryRoot;
+    /**
+     * Дерево локаций
+     */
     public static TreeNode locationsRoot;
+    /**
+     * Текущая основная матрица и сегменты со скидочными матрицами, которые им принадлежат
+     */
     public static BaselineMatrixAndSegments baselineMatrixAndSegments;
+    /**
+     * Id пользователей и их скидочных сегменты
+     */
     public static UserSegments userSegments;
 
+    // Инициализация
     static {
         microCategoryRoot = TreeNode.buildTreeFromFile("microcategories.txt");
         locationsRoot = TreeNode.buildTreeFromFile("locations.txt");
@@ -45,6 +66,11 @@ public class StaticStorage {
         }
     }
 
+    /**
+     * Сохраняет текущую ценовую матрицу и скидочные матрицы в локальное хранилище
+     *
+     * @param bms the Baseline Matrix And Segments
+     */
     public static void saveBaselineAndSegments(BaselineMatrixAndSegments bms) {
         try {
             ObjectMapper mapper = new ObjectMapper();
