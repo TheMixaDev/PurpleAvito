@@ -151,6 +151,10 @@ export default {
         }
     },
     methods: {
+        /**
+         * Prompt changing of the main function.
+         *
+         */
         changeMain() {
             FrontendService.showWarningModal(`Вы уверены, что хотите изменить текущую главную ценовую матрицу?`, () => {
                 MatrixService.setBaseline(SettingsStore.baseline, () => {
@@ -167,6 +171,12 @@ export default {
             SettingsStore.updateSettings();
             this.mainChanged = false;
         },
+        /**
+         * A method to send the price with retries if unsuccessful.
+         *
+         * @param {number} retries - the number of retries
+         * @return {void} 
+         */
         sendPrice(retries = 0) {
             this.waitPrice = true;
             let start = Date.now();

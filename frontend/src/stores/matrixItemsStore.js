@@ -10,7 +10,13 @@ export const useMatrixItemsStore = defineStore('matrixItems', () => {
     const items = ref([])
     const pagination = ref(new Pagination(0, 10, 0));
 
-    function updateItems(success, fail) {
+    /**
+     * Updates the items based on the current matrix and pagination values.
+     *
+     * @param {function} success - The success callback function
+     * @param {function} fail - The fail callback function
+     */
+    function get(success, fail) {
         if(matrix.value.length < 1) return success();
         if(loadedMatrix.value != matrix.value || pagination.value.page < 0)
             pagination.value.page = 0;
@@ -28,6 +34,6 @@ export const useMatrixItemsStore = defineStore('matrixItems', () => {
         matrix,
         items,
         pagination,
-        updateItems
+        get
     }
 });

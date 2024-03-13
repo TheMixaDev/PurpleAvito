@@ -78,7 +78,7 @@ export default {
     methods: {
         loadData(ping = true) {
             this.loading = true;
-            FrontendService.runDataUpdater(HistoryStore.updateItems, this, () => {
+            FrontendService.runDataUpdater(HistoryStore.get, this, () => {
                 this.loading = false;
             }, ping);
         },
@@ -89,7 +89,7 @@ export default {
         },
         goTo(name) {
             MatrixItemsStore.matrix = name;
-            MatrixItemsStore.updateItems(() => {
+            MatrixItemsStore.get(() => {
                 this.$router.push({ name: 'matrix' });
             }, () => this.$notify({type: 'error', text: 'Произошла ошибка при получении матрицы'}));
         }

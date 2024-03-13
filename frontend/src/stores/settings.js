@@ -16,6 +16,12 @@ export const useSettingsStore = defineStore('settings', () => {
     const lastUpdate = ref(-1);
     const loading = ref(false);
 
+    /**
+     * Retrieves matrices from the MatrixService and updates the state accordingly.
+     *
+     * @param {function} success - Callback function to be executed upon successful retrieval
+     * @param {function} fail - Callback function to be executed upon failure
+     */
     function getMatrices(success, fail) {
         MatrixService.getMatrices(
             response => {
@@ -44,6 +50,12 @@ export const useSettingsStore = defineStore('settings', () => {
         )
     }
 
+    /**
+     * Updates settings if needed and calls the success callback.
+     *
+     * @param {function} success - The callback function to execute if settings are updated successfully.
+     * @param {function} fail - The callback function to execute if settings update fails.
+     */
     function updateSettings(success = () => {}, fail = () => {}) {
         if (Date.now() - lastUpdate.value > configuration.settingsUpdate) {
             loading.value = true;

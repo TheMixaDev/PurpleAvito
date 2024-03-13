@@ -181,6 +181,10 @@ export default {
         }
     },
     methods: {
+        /**
+         * Opens a file dialog for the user to select a file, handles different cases based on file size and type,
+         * parses the file contents, and updates the UI accordingly.
+         */
         selectFile() {
             let input = document.createElement('input');
             input.type = 'file';
@@ -235,15 +239,12 @@ export default {
                                 lines++;
                                 for(let key in item) {
                                     values.push(FrontendService.valueParser(item[key]));
-                                    if(values.length == 3)
-                                        break;
+                                    if(values.length == 3) break;
                                 }
                                 if(values.length >= 3) {
                                     sucessful++;
                                     parsed.push(new MatrixItem(values[0], values[1], values[2]));
-                                } else {
-                                    errors.push(values);
-                                }
+                                } else errors.push(values);
                             }
                         }
                         catch {
@@ -285,15 +286,18 @@ export default {
                                     NewMatrixStore.clear();
                                     NewMatrixStore.addItems(parsed, unlockAndNotify, updateProgress);
                             });
-                        } else {
-                            NewMatrixStore.addItems(parsed, unlockAndNotify, updateProgress);
-                        }
+                        } else NewMatrixStore.addItems(parsed, unlockAndNotify, updateProgress);
                     };
                     reader.readAsText(file);
                 }
             };
             input.click();
         },
+        /**
+         * Redirects to an error with notification to the specific row in the table.
+         *
+         * @param {number} index - the index used to determine the error page
+         */
         redirectToError(index) {
             this.$notify({type: 'error', text: `Некорректное значение в строке ${index * 1 + 1}`});
             NewMatrixStore.updateSearch("");
@@ -302,6 +306,12 @@ export default {
             NewMatrixStore.handleSegmentsPageChange();
             this.matrixPublishing = false;
         },
+        /**
+         * A function that creates form files from the matrix items with progress updates.
+         *
+         * @param {Function} progress - a callback function to update progress
+         * @return {File} the processed file object
+         */
         async formFile(progress) {
             let result = [];
             let total = NewMatrixStore.items.length;
@@ -327,6 +337,9 @@ export default {
             }
             return (new File([new Blob([result.join("\n")], { type: 'text/plain' })], 'matrix.csv', { type: 'text/plain' }));
         },
+        /**
+         * A method to create a matrix with various steps including file handling and database updates.
+         */
         createMatrix() {
             this.percentLoading = 0;
             this.matrixPublishing = true;

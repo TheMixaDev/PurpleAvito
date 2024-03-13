@@ -88,6 +88,11 @@ export default {
                 this.$notify({type: 'success', text: 'Сегмент обновлен'});
             }, error => this.$notify({type: 'error', text: error.response.data.message}));
         },
+        /**
+         * Set all segments in the store that have changed by updating them in the matrix service. 
+         * 
+         * @return {void} 
+         */
         setAllSegments() {
             let updating = SettingsStore.segments.segments
                 .filter(item => item.changed)

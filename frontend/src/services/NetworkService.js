@@ -24,6 +24,16 @@ export const NetworkService = {
                 success(response);
         })();
     },
+    /**
+     * A function to make a root request using the specified method, URL, data, success callback, fail callback, and optional content type.
+     *
+     * @param {string} method - The HTTP method to use for the request
+     * @param {string} url - The URL to make the request to
+     * @param {Object} data - The data to be sent with the request
+     * @param {function} success - The callback function to be executed upon a successful request
+     * @param {function} fail - The callback function to be executed upon a failed request
+     * @param {string} contentType - The content type of the request (default is "application/json")
+     */
     RootRequest(method, url, data, success, fail, contentType = "application/json") {
         (async () => {
             let response = await axios({
@@ -36,6 +46,15 @@ export const NetworkService = {
                 success(response);
         })();
     },
+    /**
+     * ClassicFileRequest function to send a file via POST request using FormData.
+     *
+     * @param {string} url - The URL to send the file to.
+     * @param {File} file - The file to be sent.
+     * @param {function} success - The callback function to be executed upon a successful request
+     * @param {function} fail - The callback function to be executed upon a failed request
+     * @param {function} uploadProgress - The callback function for upload progress.
+     */
     ClassicFileRequest(url, file, success, fail, uploadProgress) {
         const formData = new FormData();
         formData.append('file', file);

@@ -59,8 +59,6 @@ import { RouterView } from 'vue-router'
         </div>
       </nav>
 
-      <!-- Sidebar -->
-
       <aside
         class="fixed top-0 left-0 z-40 w-64 h-screen pt-14 transition-transform -translate-x-full bg-white border-r border-gray-200 md:translate-x-0 dark:bg-gray-800 dark:border-gray-700"
         aria-label="Sidenav"
@@ -125,7 +123,7 @@ export default {
               () => this.$notify({type: 'error', text: 'Произошла ошибка при обновлении данных'})
             );
             this.PriceServersStore.get();
-            this.HistoryStore.updateItems();
+            this.HistoryStore.get();
         }
     },
     mounted() {
@@ -133,9 +131,10 @@ export default {
         this.PriceServersStore = usePriveServersStore();
         this.TreeStore = useTreeStore();
         this.HistoryStore = useHistoryStore();
+
         this.TreeStore.get();
         this.PriceServersStore.get();
-        this.HistoryStore.updateItems();
+        this.HistoryStore.get();
     }
 }
 </script>

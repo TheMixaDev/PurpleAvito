@@ -102,7 +102,7 @@ export default {
     methods: {
         loadData(ping = true) {
             this.loading = true;
-            FrontendService.runDataUpdater(MatrixItemsStore.updateItems, this, () => {
+            FrontendService.runDataUpdater(MatrixItemsStore.get, this, () => {
                 this.loading = false;
             }, ping);
         },
