@@ -38,7 +38,7 @@ services:
     command: |
       bash -c '
       if [ ! "$(ls -A /var/lib/postgresql/data)" ]; then
-        until pg_basebackup --progress --no-clean --pgdata=/var/lib/postgresql/data -R --slot=replication_slot1 --host=postgres-primary --port=5432 --checkpoint=fast
+        until pg_basebackup --progress --pgdata=/var/lib/postgresql/data -R --slot=replication_slot1 --host=postgres-primary --port=5432 --checkpoint=fast
         do
         echo "Waiting for primary to connect..."
         sleep 1s
@@ -67,7 +67,7 @@ services:
     command: |
       bash -c '
       if [ ! "$(ls -A /var/lib/postgresql/data)" ]; then
-        until pg_basebackup --progress --no-clean --pgdata=/var/lib/postgresql/data -R --slot=replication_slot2 --host=postgres-primary --port=5432 --checkpoint=fast
+        until pg_basebackup --progress --pgdata=/var/lib/postgresql/data -R --slot=replication_slot2 --host=postgres-primary --port=5432 --checkpoint=fast
         do
         echo "Waiting for primary to connect..."
         sleep 1s
