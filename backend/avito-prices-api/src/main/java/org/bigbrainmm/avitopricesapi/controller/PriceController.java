@@ -59,7 +59,8 @@ public class PriceController {
             if (!responseEntity.getStatusCode().equals(HttpStatus.SERVICE_UNAVAILABLE)) {
                 logger.info("Выполнен успешный редирект на другой СОЦ");
             }
-            return responseEntity;
+            // Возват тела и статус кода из редиректа во избежании дублирования хэдеров
+            return new ResponseEntity<>(responseEntity.getBody(), responseEntity.getStatusCode());
         }
 
         TreeNode microCategory = microCategoryRoot.getById(priceRequest.getMicroCategoryId());
