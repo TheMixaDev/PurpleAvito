@@ -8,7 +8,13 @@ export const useHistoryStore = defineStore('history', () => {
     const items = ref([])
     const pagination = ref(new Pagination(0, 15, 0));
 
-    function updateItems(success = () => {}, fail = () => {}) {
+    /**
+     * Update items based on pagination values.
+     *
+     * @param {function} success - Callback function to be executed on success
+     * @param {function} fail - Callback function to be executed on failure
+     */
+    function get(success = () => {}, fail = () => {}) {
         if(pagination.value.page >= pagination.value.maxPage && pagination.value.maxPage != 0)
             pagination.value.page = pagination.value.maxPage - 1;
         HistoryService.getHistory(pagination.value.page, pagination.value.itemsPerPage, data => {
@@ -21,6 +27,6 @@ export const useHistoryStore = defineStore('history', () => {
     return {
         items,
         pagination,
-        updateItems
+        get
     }
 });

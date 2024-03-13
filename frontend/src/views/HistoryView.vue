@@ -7,8 +7,9 @@ import UIButton from '@/components/ui/UIButton.vue';
 import TableComponent from '@/components/TableComponent.vue';
 
 import { useHistoryStore } from '@/stores/historyStore';
-import { FrontendService } from '@/services/FrontendService';
 import { useMatrixItemsStore } from '@/stores/matrixItemsStore';
+
+import { FrontendService } from '@/services/FrontendService';
 </script>
 
 <template>
@@ -58,7 +59,6 @@ export default {
         return {
             loading: false,
             count: -1,
-            showReadable: true,
             pageSelector: 1
         }
     },
@@ -78,7 +78,7 @@ export default {
     methods: {
         loadData(ping = true) {
             this.loading = true;
-            FrontendService.runDataUpdater(HistoryStore.updateItems, this, () => {
+            FrontendService.runDataUpdater(HistoryStore.get, this, () => {
                 this.loading = false;
             }, ping);
         },
@@ -89,7 +89,7 @@ export default {
         },
         goTo(name) {
             MatrixItemsStore.matrix = name;
-            MatrixItemsStore.updateItems(() => {
+            MatrixItemsStore.get(() => {
                 this.$router.push({ name: 'matrix' });
             }, () => this.$notify({type: 'error', text: 'Произошла ошибка при получении матрицы'}));
         }

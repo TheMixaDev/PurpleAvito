@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
+
 import { Pagination } from '@/models/pagination';
 import { MatrixItem } from '@/models/matrixItem';
 import { FrontendService } from '@/services/FrontendService';
@@ -26,10 +27,21 @@ export const useNewMatrixStore = defineStore('newMatrix', () => {
         applySearch();
     }
 
+    /**
+     * Compares two values with optional strict comparison.
+     *
+     * @param {any} origin - The original value to compare.
+     * @param {any} value - The value to compare against the original.
+     * @param {boolean} strict - If true, performs a strict comparison. If false, checks if the original value includes the specified value.
+     * @return {boolean} Returns true if the comparison is successful, otherwise false.
+     */
     function compare(origin, value, strict) {
         return strict ? origin?.toString() == value : origin?.toString().includes(value);
     }
 
+    /**
+     * Filters the items based on the search value. 
+     */
     function applySearch() {
         let prompt = search.value+"";
         let strict = prompt.startsWith("!");
@@ -61,6 +73,13 @@ export const useNewMatrixStore = defineStore('newMatrix', () => {
         applySearch();
     }
 
+    /**
+     * A function that adds items asynchronously with progress updates.
+     *
+     * @param {array} newItems - the items to add
+     * @param {function} callback - the callback function to call after adding items
+     * @param {function} progress - the function to report progress
+     */
     function addItems(newItems, callback, progress) {
         setTimeout(async () => {
             progress(0);

@@ -3,6 +3,7 @@ import UIIndicatorGray from './ui/indicators/UIIndicatorGray.vue';
 import UIIndicatorGreen from './ui/indicators/UIIndicatorGreen.vue';
 import UIIndicatorRed from './ui/indicators/UIIndicatorRed.vue';
 import UIIndicatorYellow from './ui/indicators/UIIndicatorYellow.vue';
+
 import { FrontendService } from '@/services/FrontendService';
 </script>
 <template>

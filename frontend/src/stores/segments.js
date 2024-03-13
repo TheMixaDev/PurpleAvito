@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
+
 import { Pagination } from '@/models/pagination';
 
 export const useSegmentsStore = defineStore('segments', () => {
@@ -20,6 +21,9 @@ export const useSegmentsStore = defineStore('segments', () => {
         search.value = newSearch;
     }
 
+    /**
+     * Filters the items based on the search value. 
+     */
     function applySearch() {
         filtered.value = segments.value
             .filter(item => item.id.toString().includes(search.value) ||

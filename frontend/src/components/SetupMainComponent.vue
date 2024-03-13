@@ -1,4 +1,6 @@
 <script setup>
+import UIIndicatorGreen from './ui/indicators/UIIndicatorGreen.vue';
+
 import UITableRow from '@/components/ui/table/UITableRow.vue';
 import UITableCell from '@/components/ui/table/UITableCell.vue';
 
@@ -9,13 +11,13 @@ import UIDropdownWithSearch from '@/components/ui/UIDropdownWithSearch.vue';
 import UILabeledCheckbox from '@/components/ui/UILabeledCheckbox.vue';
 import UILabeledInput from './ui/UILabeledInput.vue';
 
+import { Pagination } from '@/models/pagination';
+
 import { useSettingsStore } from '@/stores/settings';
+import { useTreeStore } from '@/stores/tree';
 
 import { FrontendService } from '@/services/FrontendService';
 import { MatrixService } from '@/services/MatrixService';
-import { useTreeStore } from '@/stores/tree';
-import { Pagination } from '@/models/pagination';
-import UIIndicatorGreen from './ui/indicators/UIIndicatorGreen.vue';
 import { PriceServersService } from '@/services/PriceServersService';
 </script>
 
@@ -149,6 +151,10 @@ export default {
         }
     },
     methods: {
+        /**
+         * Prompt changing of the main function.
+         *
+         */
         changeMain() {
             FrontendService.showWarningModal(`Вы уверены, что хотите изменить текущую главную ценовую матрицу?`, () => {
                 MatrixService.setBaseline(SettingsStore.baseline, () => {
@@ -165,6 +171,12 @@ export default {
             SettingsStore.updateSettings();
             this.mainChanged = false;
         },
+        /**
+         * A method to send the price with retries if unsuccessful.
+         *
+         * @param {number} retries - the number of retries
+         * @return {void} 
+         */
         sendPrice(retries = 0) {
             this.waitPrice = true;
             let start = Date.now();
