@@ -9,7 +9,6 @@ import org.bigbrainmm.avitopricesapi.dto.DiscountSegment;
 import org.bigbrainmm.avitopricesapi.dto.Matrix;
 import org.bigbrainmm.avitopricesapi.repository.DiscountBaselineRepository;
 import org.bigbrainmm.avitopricesapi.repository.SourceBaselineRepository;
-import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,7 +16,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -70,15 +68,15 @@ public class UpdateBaselineAndSegmentsService {
     public void startUpdatingThread() {
         if (startUpdatingThreadStarted) return;
         Thread thread = new Thread(() -> {
-            int counter = 0, maxAttempts = 3;
+            int counter = 0, maxAttempts = 5;
             boolean success = updateBaselineAndSegmentsFromServer();
             while (!isDataUpdated(baselineMatrixAndSegments) || !success) {
                 try {
-                    Thread.sleep(400);
+                    Thread.sleep(1000);
                     counter++;
                     success = updateBaselineAndSegmentsFromServer();
                     if (counter >= maxAttempts) {
-                        startTryingToUpdateBaselineAndSegmentsFromAnotherSOCs();
+                        tryToUpdateBaselineAndSegmentsFromAnotherSOCs();
                         break;
                     }
                 } catch (InterruptedException ignored) { }
@@ -125,7 +123,7 @@ public class UpdateBaselineAndSegmentsService {
         }
     }
 
-    public void startTryingToUpdateBaselineAndSegmentsFromAnotherSOCs() {
+    public void tryToUpdateBaselineAndSegmentsFromAnotherSOCs() {
         try {
             List<BaselineMatrixAndSegments> bs = new ArrayList<>();
             Arrays.stream(servicesUrl.split(",")).filter(s -> !s.isEmpty() && !s.equals(selfUrl)).forEach(s -> {
