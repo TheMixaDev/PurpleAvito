@@ -12,6 +12,7 @@ import org.bigbrainmm.avitopricesapi.repository.SourceBaselineRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -31,6 +32,7 @@ import static org.bigbrainmm.avitopricesapi.StaticStorage.*;
  * минимизировать моргание цен. Подробнее о нюансах работы будет в презентации.
  */
 @Service
+@Lazy(false)
 @RequiredArgsConstructor
 @Getter
 public class UpdateBaselineAndSegmentsService {

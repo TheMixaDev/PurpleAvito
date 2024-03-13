@@ -5,6 +5,7 @@ import org.bigbrainmm.avitopricesapi.dto.BaselineMatrixAndSegments;
 import org.bigbrainmm.avitopricesapi.dto.TreeNode;
 import org.bigbrainmm.avitopricesapi.dto.UserSegments;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -20,6 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Статичное хранилище
  */
 @Service
+@Lazy(false)
 public class StaticStorage {
     /**
      * Флаг доступности сервера
