@@ -361,7 +361,7 @@ To run the Java Spring Boot application, follow these steps:
 
 ### API Routes Documentation
 
-Backend Admin API Routes documentation can be accessed with swagger after server startup via URL [http://localhost:8080/swagger-ui/index.html#/](http://localhost:8080/swagger-ui/index.html#/) or on demo server [DEMO URL HERE](DEMO URL HERE)
+Backend Admin API Routes documentation can be accessed with swagger after server startup via URL [http://localhost:8080/swagger-ui/index.html#/](http://localhost:8080/swagger-ui/index.html#/) or on demo server [http://purple.alephdev.ru:8080/swagger-ui/index.html#](http://purple.alephdev.ru:8080/swagger-ui/index.html#)
 
 # Java "Price Service" backend API
 
@@ -496,7 +496,7 @@ To run the Java Spring Boot application, follow these steps:
 
 ### API Routes Documentation
 
-Backend Price Service API Routes documentation can be accessed with swagger after server startup via URL [http://localhost:8081/swagger-ui/index.html#/](http://localhost:8081/swagger-ui/index.html#/) or on demo server [DEMO URL HERE](DEMO URL HERE) all price APIs under all ports has their own swagger.
+Backend Price Service API Routes documentation can be accessed with swagger after server startup via URL [http://localhost:8081/swagger-ui/index.html#/](http://localhost:8081/swagger-ui/index.html#/) or on demo server [http://purple.alephdev.ru:8081/swagger-ui/index.html#](http://purple.alephdev.ru:8081/swagger-ui/index.html#) all price APIs under all ports has their own swagger.
 
 # Database
 
