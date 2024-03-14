@@ -94,6 +94,7 @@ services:
       - DEMO_SERVER=true
       - AVITO_PRICES_API_STATUS_TIMEOUT=500 # Increase if servers are VERY far away apart from each other
       - AUTO_CACHE=true
+      - USE_HASH=true
   
   avito-prices-api-primary:
     container_name: avito-prices-api-primary

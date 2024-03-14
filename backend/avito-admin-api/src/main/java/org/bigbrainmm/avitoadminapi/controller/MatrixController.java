@@ -115,10 +115,10 @@ public class MatrixController {
             jdbcTemplate.update("CREATE TRIGGER before_insert_" + newName + " BEFORE INSERT ON " + newName + " FOR EACH ROW EXECUTE FUNCTION set_matrix_id();");
 
             if (name.contains("baseline_matrix")) {
-                newSourceBaseline = new SourceBaseline(newName, false);
+                newSourceBaseline = new SourceBaseline(newName, false, isAutoCache);
                 sourceBaselineRepository.save(newSourceBaseline);
             } else if (name.contains("discount_matrix")) {
-                newDiscountBaseline = new DiscountBaseline(newName, false);
+                newDiscountBaseline = new DiscountBaseline(newName, false, isAutoCache);
                 discountBaselineRepository.save(newDiscountBaseline);
             }
             jdbcTemplate.update("ALTER TABLE " + newName + " ADD CONSTRAINT " + newName + "_pkey PRIMARY KEY (location_id, microcategory_id);");
@@ -157,7 +157,7 @@ public class MatrixController {
                     query.deleteCharAt(query.length() - 2);
                     query.append("ON CONFLICT (microcategory_id, location_id) DO UPDATE SET price = EXCLUDED.price;");
                     jdbcTemplate.update(query.toString());
-                    System.out.println("Sent " + line + " rows to " + newName);
+                    logger.info("Sent " + line + " rows to " + newName);
                     completedSuccessfully = true;
                 }
             } catch (Exception e) {
@@ -165,8 +165,10 @@ public class MatrixController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{ \"message\": \" Неверный формат тела запроса. \" }");
             } finally {
                 if (completedSuccessfully) {
-                    if(isAutoCache)
-                        fillMatrix(name);
+                    // Кэширование
+                    if (isAutoCache) {
+                        fillCacheMatrix(newName);
+                    }
                     if (name.contains("baseline_matrix")) {
                         newSourceBaseline.setReady(true);
                         sourceBaselineRepository.save(newSourceBaseline);
@@ -175,7 +177,7 @@ public class MatrixController {
                         discountBaselineRepository.save(newDiscountBaseline);
                     }
                 } else {
-                    // Cleanup
+                    // Cleanup if not completed successfully
                     jdbcTemplate.update("drop table " + newName);
                     if (name.contains("baseline_matrix")) {
                         assert newSourceBaseline != null;
@@ -301,12 +303,13 @@ public class MatrixController {
         return ResponseEntity.ok(new MessageResponse("Изменения выполнены успешно"));
     }
 
-    public void fillMatrix(String name) {
-        logger.info("Filling matrix "+name);
-        String sql = "select * from " + name + " order by id asc"; // Возможно даст ошибку, проверить postgres
+    public void fillCacheMatrix(String name) {
+        logger.info("Filling matrix " + name);
+        String sql = "select * from " + name + " order by id asc";
         List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql);
-        List<MatrixRow> matrixRows = new ArrayList<>();
         for (Map<String, Object> row : rows) {
+            // Описание алгоритма
+
             //if row.get("price") == null
                 // Смотрим строку на 1 микрокатегорию вверх
                     // если в ней стоит "found_price" - копируем "found_price", "found_location", "found_microcategory"
@@ -316,9 +319,66 @@ public class MatrixController {
                     // если в ней стоит "found_price" - копируем "found_price", "found_location", "found_microcategory"
             //else
                 // поставить в "found_price", "found_location", "found_microcategory" в виде текущих значений строки
+
+            Integer mic = (Integer) row.get("microcategory_id");
+            Integer loc = (Integer) row.get("location_id");
+            TreeNode micNode = microCategoryRoot.getById(mic.longValue()),
+                    locNode = locationsRoot.getById(loc.longValue());
+            Integer price = (Integer) row.get("price");
+            if (price == null) {
+                TreeNode micNodeParent = micNode.getParent();
+                TreeNode locNodeParent = locNode.getParent();
+                // if parent == null or parent.getname == "root", то запускаем по parentNodeLoc
+                // Если и он нулл, то значит мы дошли до вершины, continue
+                if (micNodeParent != null && !micNodeParent.getId().equals(0L)) {
+                    var found = getRowByMicAndLoc(name, micNodeParent.getId(), loc);
+                    if (found != null) {
+                        var fPrice = (Integer) found.get("found_price");
+                        if (fPrice != null) {
+                            setFountPriceToRow(name, mic, loc, fPrice,
+                                    (Integer) found.get("found_microcategory_id"),
+                                    (Integer) found.get("found_location_id"));
+                            continue;
+                        }
+                    }
+                }
+                if (locNodeParent != null && !locNodeParent.getId().equals(0L)) {
+                    var found = getRowByMicAndLoc(name, mic, locNodeParent.getId());
+                    if (found == null) continue;
+                    var fPrice = (Integer) found.get("found_price");
+                    if (fPrice != null) {
+                        setFountPriceToRow(name, mic, loc, fPrice,
+                                (Integer) found.get("found_microcategory_id"),
+                                (Integer) found.get("found_location_id"));
+                    }
+                }
+            } else {
+                setFountPriceToRow(name, mic, loc, price, mic, loc);
+            }
         }
-        // если "found_price" == null после всех проверенных строк - поставить "found_price" = -1
-        // добавить is_cached = true (дефолтное значение при инициализации баз поставить false)
+    }
+
+    private void setFountPriceToRow(String name, Integer mic, Integer loc, Integer fPrice, Integer fMic, Integer fLoc) {
+        jdbcTemplate.update(
+                "update " + name +
+                " set found_price = " + fPrice +
+                ", found_microcategory_id = " + fMic +
+                ", found_location_id = " + fLoc +
+                " where microcategory_id = " + mic + " and location_id = " + loc
+        );
+    }
+
+    private Map<String, Object> getRowByMicAndLoc(String name, long mic, long loc) {
+        try {
+            // Умнейшая формула вычисления хэшированного id
+            long id = useHash ? loc + 4108L * (mic - 1) : -1;
+            String sql = useHash ?
+                    "select * from " + name + " where id = " + id + ";" :
+                    "select * from " + name + " where microcategory_id = " + mic + " and location_id = " + loc + ";";
+            return jdbcTemplate.queryForMap(sql);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @ExceptionHandler(InvalidDataException.class)
