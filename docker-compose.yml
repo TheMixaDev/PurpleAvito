@@ -18,7 +18,7 @@ services:
       -c hot_standby=on 
       -c max_wal_senders=10 
       -c max_replication_slots=10 
-      -c hot_standby_feedback=on;
+      -c hot_standby_feedback=on
 
   postgres-replica-1:
     image: postgres:14-alpine
@@ -37,7 +37,7 @@ services:
       PGPASSWORD: Qwerty123
     command: |
       bash -c '
-      if [ ! "$(ls -A /var/lib/postgresql/data)" ]; then
+      if [ ! "$$(ls -A /var/lib/postgresql/data)" ]; then
         until pg_basebackup --progress --pgdata=/var/lib/postgresql/data -R --slot=replication_slot1 --host=postgres-primary --port=5432 --checkpoint=fast
         do
         echo "Waiting for primary to connect..."
@@ -66,7 +66,7 @@ services:
       PGPASSWORD: Qwerty123
     command: |
       bash -c '
-      if [ ! "$(ls -A /var/lib/postgresql/data)" ]; then
+      if [ ! "$$(ls -A /var/lib/postgresql/data)" ]; then
         until pg_basebackup --progress --pgdata=/var/lib/postgresql/data -R --slot=replication_slot2 --host=postgres-primary --port=5432 --checkpoint=fast
         do
         echo "Waiting for primary to connect..."
@@ -152,10 +152,17 @@ services:
   
   nginx:
     container_name: nginx
-    build: ./frontend
+    build: ./nginx
     restart: always
     ports:
       - '80:80'
+  
+  frontend:
+    container_name: frontend
+    build: ./frontend
+    restart: always
+    ports:
+      - '5173:5173'
 
 networks:
   default:
