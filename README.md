@@ -259,16 +259,22 @@ The Admin UI interacts with a Admin Backend API to perform a range of operations
 
 Use Cases:
 - Checking current status of servers with interactive map, ping and server names. [http://localhost/](http://localhost/)
+
 ![Main frontend](./img/front1.png)
 - UI for setting up current matrix, after matrix selection and clicking "Apply" button. User will be prompted with confirmation. If not all price services have new matrix settings, the error message will be shown with amount of ready-to-use price services. Also, user can check on this page current price for user_id, category and location. [http://localhost/setup](http://localhost/setup)
+
 ![Setting up baseline](./img/front2.png)
 - UI for setting up discount matrices and their segments. Using "Apply all" button is recommended to avoid conflicts on setting matrices one by one. [http://localhost/setup](http://localhost/setup) (button "Segment discount matrices" is on top)
+
 ![Setting up segments](./img/front3.png)
 - UI for creating a new matrix with parent matrix selector. "Drop matrix" button removes parent (for creating new clear matrix). "Set primary" button sets current baseline matrix. Invalid rows are highlighted with red. UI accepts files in `.json`, `.csv` and `.sql` format with data. [http://localhost/create](http://localhost/create)
+
 ![Matrix creation](./img/front4.png)
 - UI for matrix observer. After selection of matrix, it will be shown in the UI. "Edit" button will redirect user to matrix editor with selected row. [http://localhost/matrix](http://localhost/matrix)
+
 ![Matrix observe](./img/front5.png)
 - UI for matrices change history. "Watch" button redirects user to matrix observer. [http://localhost/history](http://localhost/history)
+
 ![History](./img/front6.png)
 # Java "Admin" backend API
 
@@ -410,13 +416,16 @@ Testing program written in `C#`
 	- Min execution time: **0.53ms**
 	- Max execution time: **45.61ms**
 	- Average execution time: **1.77ms**
-		![Test result image 1](./img/full1.png)
+
+  ![Test result image 1](./img/full1.png)
+  
 2. Thread 2:
 	- **100%** of requests succeeded
 	- Min execution time: **0.65ms**
 	- Max execution time: **44.16ms**
 	- Average execution time: **2.00ms**
-		![Test result image 2](./img/full2.png)
+		
+  ![Test result image 2](./img/full2.png)
 
 #### Key disadvantages of the system
 
