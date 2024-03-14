@@ -57,8 +57,8 @@ public class MatrixController {
     @Operation(summary = "Посмотреть список всех матриц")
     public AllMatrixResponse getMatrices() {
         AllMatrixResponse allMatrixRequest = new AllMatrixResponse();
-        allMatrixRequest.setBaselineMatrices(sourceBaselineRepository.findAll().stream().map(s -> new Matrix(s.getName())).toList());
-        allMatrixRequest.setDiscountMatrices(discountBaselineRepository.findAll().stream().map(s -> new Matrix(s.getName())).toList());
+        allMatrixRequest.setBaselineMatrices(sourceBaselineRepository.findAllisReadyTrue().stream().map(s -> new Matrix(s.getName())).toList());
+        allMatrixRequest.setDiscountMatrices(discountBaselineRepository.findAllisReadyTrue().stream().map(s -> new Matrix(s.getName())).toList());
         return allMatrixRequest;
     }
 
