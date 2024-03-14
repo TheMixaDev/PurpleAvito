@@ -6,31 +6,44 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.bigbrainmm.avitopricesapi.dto.*;
+import org.bigbrainmm.avitopricesapi.entity.DiscountBaseline;
+import org.bigbrainmm.avitopricesapi.entity.SourceBaseline;
+import org.bigbrainmm.avitopricesapi.repository.DiscountBaselineRepository;
+import org.bigbrainmm.avitopricesapi.repository.SourceBaselineRepository;
 import org.bigbrainmm.avitopricesapi.service.UpdateBaselineAndSegmentsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.*;
 
 import static org.bigbrainmm.avitopricesapi.StaticStorage.*;
 
+
+/**
+ * Контроллер получения цены. Просмотр подробностей и тестирование в swagger-ui: http://localhost:PORT/swagger-ui/index.html
+ */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/")
 @Tag(name = "Получение цен!")
 public class PriceController {
 
+    private final SourceBaselineRepository sourceBaselineRepository;
+    private final DiscountBaselineRepository discountBaselineRepository;
     private final UpdateBaselineAndSegmentsService updateBaselineAndSegmentsService;
     private final JdbcTemplate jdbcTemplate;
     private final RestTemplate restTemplate;
@@ -85,7 +98,6 @@ public class PriceController {
                     if (matrixName == null) continue;
                     price = findPrice(
                             microCategory,
-                            microCategory,
                             location,
                             matrixName);
                     if (price != null) {
@@ -98,7 +110,6 @@ public class PriceController {
         if (price == null) {
             price = findPrice(
                     microCategory,
-                    microCategory,
                     location,
                     baselineMatrixAndSegments.getBaselineMatrix().getName()
             );
@@ -106,10 +117,20 @@ public class PriceController {
         return ResponseEntity.status(HttpStatus.OK).body(price);
     }
 
-    private PriceResponse findPrice(TreeNode initialMicrocategory, TreeNode microCategory, TreeNode location, String tableName) {
+    private PriceResponse findPrice(TreeNode microCategory, TreeNode location, String matrixName) {
+        if (matrixIsCached(matrixName)) {
+            logger.info("Ищем цену в кэше: " + matrixName);
+            return findPriceInCache(microCategory, location, matrixName);
+        } else {
+            logger.info("Ищем цену в базе: " + matrixName + ", use hash: " + useHash);
+            return findPriceRunTree(microCategory, microCategory, location, matrixName);
+        }
+    }
+
+    private PriceResponse findPriceRunTree(TreeNode initialMicrocategory, TreeNode microCategory, TreeNode location, String matrixName) {
         // Описание алгоритма
 
-        // select * from tableName where location_id, mic_id
+        // select * from matrixName where location_id, mic_id
         // if price != NULL reutrn price, mic, location
         // else
             // берём верхнюю ноду категории
@@ -119,25 +140,68 @@ public class PriceController {
             // если она не нулл
                 // return findPrice(initial_MID, initial_MID, parent_location_id)
         long id = useHash ? location.getId() + 4108 * (microCategory.getId() - 1) : -1;
-        String sql = useHash ? "select * from " + tableName + " where id = " + id + " and price is not null;"
-                : "select * from " + tableName + " where microcategory_id = " + microCategory.getId() + " and location_id = " + location.getId() + " and price is not null;";
-        logger.info(sql);
+        String sql = useHash ? "select * from " + matrixName + " where id = " + id + " and price is not null;"
+                : "select * from " + matrixName + " where microcategory_id = " + microCategory.getId() + " and location_id = " + location.getId() + " and price is not null;";
+
         List<PriceResponse> res = jdbcTemplate.query(sql, (rs, rowNum) ->
-                new PriceResponse(rs.getLong("price"), rs.getLong("location_id"), rs.getLong("microcategory_id"), tableName, null));
-        // Если "found_price" == -1, то вернуть null
-        // Если "found_price" != null, то вернуть "found_price" - поменять на is_cached?
-        // Иначе - запустить алгоритм
+                new PriceResponse(rs.getLong("price"), rs.getLong("location_id"), rs.getLong("microcategory_id"), matrixName, null));
+
         if (!res.isEmpty() && res.get(0).getPrice() != 0) return res.get(0);
 
         TreeNode parentNodeMic = microCategory.getParent();
         if (parentNodeMic != null) {
-            return findPrice(initialMicrocategory, parentNodeMic, location, tableName);
+            return findPriceRunTree(initialMicrocategory, parentNodeMic, location, matrixName);
         }
         TreeNode parentNodeLoc = location.getParent();
         if (parentNodeLoc != null) {
-            return findPrice(initialMicrocategory, initialMicrocategory, parentNodeLoc, tableName);
+            return findPriceRunTree(initialMicrocategory, initialMicrocategory, parentNodeLoc, matrixName);
         }
         return null;
+    }
+
+    private PriceResponse findPriceInCache(TreeNode microCategory, TreeNode location, String matrixName) {
+        Map<String, Object> row = getRowByMicAndLoc(matrixName, microCategory.getId(), location.getId());
+        if (row == null) return null;
+        return new PriceResponse(
+                wrOInt(row.get("found_price")),
+                wrOInt(row.get("found_location_id")),
+                wrOInt(row.get("found_microcategory_id")),
+                matrixName,
+                null
+        );
+    }
+
+    private boolean matrixIsCached(String matrixName) {
+        if (matrixName.contains("baseline_matrix")) {
+            SourceBaseline baseline = sourceBaselineRepository.findByName(matrixName);
+            if (baseline == null) return false;
+            return baseline.getIsCached() != null && baseline.getIsCached();
+        } else if (matrixName.contains("discount_matrix")) {
+            DiscountBaseline discount = discountBaselineRepository.findByName(matrixName);
+            if (discount == null) return false;
+            return discount.getIsCached() != null && discount.getIsCached();
+        }
+        return false;
+    }
+
+    private Long wrOInt(Object o) {
+        if (o == null) return null;
+        if (o instanceof Long) return (Long) o;
+        if (o instanceof Integer) return ((Integer) o).longValue();
+        return Long.parseLong(o.toString());
+    }
+
+    private Map<String, Object> getRowByMicAndLoc(String name, long mic, long loc) {
+        try {
+            // Умнейшая формула вычисления хэшированного id
+            long id = useHash ? loc + 4108L * (mic - 1) : -1;
+            String sql = useHash ?
+                    "select * from " + name + " where id = " + id + ";" :
+                    "select * from " + name + " where microcategory_id = " + mic + " and location_id = " + loc + ";";
+            return jdbcTemplate.queryForMap(sql);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @PostMapping(value="/is_baseline_segments_updated", produces = "application/json")
@@ -198,6 +262,14 @@ public class PriceController {
         return new MessageResponse(ex.getMessage());
     }
 
+    @ExceptionHandler(BadSqlGrammarException.class)
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    public MessageResponse error(BadSqlGrammarException ex) {
+        isAvailable.set(false);
+        logger.info("Поменян статус сервера: " + isAvailable.get());
+        updateBaselineAndSegmentsService.startUpdatingThread();
+        return new MessageResponse(ex.getMessage());
+    }
 
     public static class InvalidDataException extends RuntimeException {
         public InvalidDataException(String message) {

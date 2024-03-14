@@ -33,6 +33,12 @@ public class DiscountBaseline {
      */
     @Column(name="ready")
     private Boolean ready;
+    /**
+     * Кэширована ли матрица
+     * Иными словами: Подсчитаны ли в этой матрице результаты для microcategory_id и location_id заранее
+     */
+    @Column(name="is_cached", columnDefinition = "boolean default false", nullable = false)
+    private Boolean isCached;
 
     /**
      * Instantiates a new Discount baseline.

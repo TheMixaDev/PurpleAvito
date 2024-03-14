@@ -6,6 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * DTO: Ответ c токеном доступа
+ */
 @Data
 @Builder
 @NoArgsConstructor

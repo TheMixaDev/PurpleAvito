@@ -6,6 +6,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * DTO: Сервис отдачи цен
+ */
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter

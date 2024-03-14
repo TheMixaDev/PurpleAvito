@@ -25,6 +25,10 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+
+/**
+ * Контроллер для работы с сервисами отдачи цен. Просмотр подробностей и тестирование в swagger-ui: http://localhost:PORT/swagger-ui/index.html
+ */
 @RequiredArgsConstructor
 @RequestMapping("/api/services")
 @RestController

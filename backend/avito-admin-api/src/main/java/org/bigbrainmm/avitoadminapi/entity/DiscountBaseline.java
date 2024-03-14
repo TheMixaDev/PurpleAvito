@@ -33,6 +33,12 @@ public class DiscountBaseline {
      */
     @Column(name="ready")
     private Boolean ready;
+    /**
+     * Кэширована ли матрица
+     * Иными словами: Подсчитаны ли в этой матрице результаты для microcategory_id и location_id заранее
+     */
+    @Column(name="is_cached", columnDefinition = "boolean default false")
+    private Boolean isCached;
 
     /**
      * Instantiates a new Discount baseline.
@@ -40,8 +46,9 @@ public class DiscountBaseline {
      * @param name  the name
      * @param ready the ready
      */
-    public DiscountBaseline(String name, Boolean ready) {
+    public DiscountBaseline(String name, Boolean ready, Boolean isCached) {
         this.name = name;
         this.ready = ready;
+        this.isCached = isCached;
     }
 }

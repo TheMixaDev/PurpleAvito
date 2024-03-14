@@ -14,6 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * Контроллер для просмотра истории изменений цен. Просмотр подробностей и тестирование в swagger-ui: http://localhost:PORT/swagger-ui/index.html
+ */
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/history")

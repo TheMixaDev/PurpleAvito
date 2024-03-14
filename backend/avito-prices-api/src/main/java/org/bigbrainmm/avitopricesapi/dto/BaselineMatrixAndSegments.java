@@ -8,6 +8,9 @@ import lombok.Setter;
 
 import java.util.List;
 
+/**
+ * DTO: Текущая стандартная матрица и список скидочных сегментов
+ */
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter

@@ -9,6 +9,9 @@ import lombok.Setter;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * DTO с пользователями и скидочными сегментами к ним
+ */
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter

@@ -8,6 +8,9 @@ import lombok.Setter;
 
 import java.util.List;
 
+/**
+ * DTO: Список всех матриц
+ */
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter

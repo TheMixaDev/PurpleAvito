@@ -5,6 +5,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+/**
+ * DTO: Запрос на регистрацию
+ */
 @Data
 @Schema(description = "Запрос на регистрацию")
 public class SignUpRequest {

@@ -7,6 +7,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * DTO: Скидочный сегмент
+ */
 @Getter
 @Setter
 @NoArgsConstructor
