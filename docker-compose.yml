@@ -93,7 +93,7 @@ services:
       - AVITO_PRICES_SERVICES_COORDS=56.838011,60.597474|55.791116,37.466952|59.886541,30.329361
       - DEMO_SERVER=true
       - AVITO_PRICES_API_STATUS_TIMEOUT=500 # Increase if servers are VERY far away apart from each other
-      - AUTO_CACHE=true
+      - AUTO_CACHE=false
       - USE_HASH=true
   
   avito-prices-api-primary:
