@@ -7,6 +7,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * DTO: Установить новую текущую матрицу по имени
+ */
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter

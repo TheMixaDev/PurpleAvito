@@ -6,6 +6,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * DTO: Запрос цены
+ */
 @Getter
 @Setter
 @NoArgsConstructor

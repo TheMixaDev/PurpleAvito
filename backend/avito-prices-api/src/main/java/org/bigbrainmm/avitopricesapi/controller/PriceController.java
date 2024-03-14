@@ -32,6 +32,10 @@ import java.util.concurrent.*;
 
 import static org.bigbrainmm.avitopricesapi.StaticStorage.*;
 
+
+/**
+ * Контроллер получения цены. Просмотр подробностей и тестирование в swagger-ui: http://localhost:PORT/swagger-ui/index.html
+ */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/")
@@ -266,7 +270,6 @@ public class PriceController {
         updateBaselineAndSegmentsService.startUpdatingThread();
         return new MessageResponse(ex.getMessage());
     }
-
 
     public static class InvalidDataException extends RuntimeException {
         public InvalidDataException(String message) {

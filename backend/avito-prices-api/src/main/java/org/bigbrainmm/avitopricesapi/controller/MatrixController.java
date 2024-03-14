@@ -2,6 +2,7 @@ package org.bigbrainmm.avitopricesapi.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Hidden;
 import lombok.RequiredArgsConstructor;
 import org.bigbrainmm.avitopricesapi.StaticStorage;
 import org.bigbrainmm.avitopricesapi.dto.*;
@@ -24,6 +25,10 @@ import java.util.Optional;
 import static org.bigbrainmm.avitopricesapi.StaticStorage.baselineMatrixAndSegments;
 import static org.bigbrainmm.avitopricesapi.StaticStorage.isAvailable;
 
+
+/**
+ * Контроллер работы с матрицами. Просмотр подробностей и тестирование в swagger-ui: http://localhost:PORT/swagger-ui/index.html
+ */
 @RequiredArgsConstructor
 @RestController
 @Tag(name = "Работа с матрицами", description = "Тут располагаются методы для установки, обновления, загрузки, клонирования, просмотра и многих других операций над матрицами")
@@ -41,6 +46,7 @@ public class MatrixController {
         return baselineMatrixAndSegments;
     }
 
+    @Hidden
     @PostMapping(value = "/setup/baseline", produces = "application/json")
     @Operation(summary = "Установить текущую стандартную матрицу по имени")
     public ResponseEntity<MessageResponse> setupBaseline(@RequestBody SetupMatrixRequest request) {
@@ -66,6 +72,7 @@ public class MatrixController {
         return ResponseEntity.ok(new MessageResponse("Матрица " + request.getName() + " установлена"));
     }
 
+    @Hidden
     @PostMapping(value = "/setup/segments", produces = "application/json")
     @Operation(summary = "Установить в дискаунт группах матрицы по id сгемента и name discount_table")
     public ResponseEntity<MessageResponse> setupSegments(@RequestBody SetupDiscountSegmentsRequest request) {
@@ -121,6 +128,8 @@ public class MatrixController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+
+    @Hidden
     @PostMapping(value = "/setup/baseline_segments", produces = "application/json")
     @Operation(summary = "Установить текущую стандартную матрицу по имени и одновременно обновить группы скидочных сегментов. " +
             "По сути объединённый запрос /setup и /setup/segments")

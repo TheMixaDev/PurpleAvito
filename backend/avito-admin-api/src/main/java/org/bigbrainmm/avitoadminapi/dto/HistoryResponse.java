@@ -9,6 +9,9 @@ import org.bigbrainmm.avitoadminapi.entity.History;
 
 import java.util.List;
 
+/**
+ * DTO: История изменений
+ */
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter

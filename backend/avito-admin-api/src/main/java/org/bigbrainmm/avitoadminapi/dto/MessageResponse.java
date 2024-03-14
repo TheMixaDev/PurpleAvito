@@ -6,6 +6,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * DTO: Сообщение об ошибке
+ */
 @Getter
 @Setter
 @AllArgsConstructor

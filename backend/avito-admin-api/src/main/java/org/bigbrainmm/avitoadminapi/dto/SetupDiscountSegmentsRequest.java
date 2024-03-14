@@ -8,6 +8,9 @@ import lombok.Setter;
 
 import java.util.List;
 
+/**
+ * DTO: Установить скидочные матрицы для соответствующих сегментов
+ */
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter

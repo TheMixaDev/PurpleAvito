@@ -29,6 +29,9 @@ import java.util.*;
 
 import static org.bigbrainmm.avitoadminapi.StaticStorage.*;
 
+/**
+ * Контроллер для работы с матрицами. Просмотр подробностей и тестирование в swagger-ui: http://localhost:PORT/swagger-ui/index.html
+ */
 @RequiredArgsConstructor
 @RequestMapping("/api/matrices")
 @RestController

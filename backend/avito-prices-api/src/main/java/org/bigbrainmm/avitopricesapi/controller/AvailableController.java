@@ -1,5 +1,6 @@
 package org.bigbrainmm.avitopricesapi.controller;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.bigbrainmm.avitopricesapi.dto.MessageResponse;
@@ -15,6 +16,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import static org.bigbrainmm.avitopricesapi.StaticStorage.isAvailable;
 
+/**
+ * Контроллер проверки доступности сервиса. Просмотр подробностей и тестирование в swagger-ui: http://localhost:PORT/swagger-ui/index.html
+ */
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/available")

@@ -6,6 +6,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * DTO: Матрица
+ */
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
