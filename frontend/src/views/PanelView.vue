@@ -361,7 +361,7 @@ export default {
                         SettingsStore.dropUpdate();
                         SettingsStore.updateSettings(() => {
                             NewMatrixStore.clear();
-                            NewMatrixStore.parentMatrix = data.matrixName;
+                            //NewMatrixStore.parentMatrix = data.matrixName;
                             this.updatingDb = false;
                             this.matrixPublishing = false;
                         }, () => {
