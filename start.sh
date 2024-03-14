@@ -1,7 +1,7 @@
 docker-compose up -d postgres-primary
 docker-compose up -d avito-admin-api
 
-sleep 10
+sleep 15
 
 docker-compose restart postgres-primary
 docker-compose restart avito-admin-api
